@@ -1,13 +1,12 @@
 import { Skeleton } from '@affine/component';
 import { Button } from '@affine/component/ui/button';
+import { AuthService, ServerConfigService } from '@affine/core/modules/cloud';
 import { popupWindow } from '@affine/core/utils';
 import { appInfo } from '@affine/electron-api';
 import { OAuthProviderType } from '@affine/graphql';
 import { GithubIcon, GoogleDuotoneIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { type ReactElement, useCallback } from 'react';
-
-import { ServerConfigService } from '../../../modules/cloud';
 
 const OAuthProviderMap: Record<
   OAuthProviderType,
@@ -49,35 +48,36 @@ export function OAuth({ redirectUrl }: { redirectUrl?: string }) {
   ));
 }
 
-function OAuthProvider({
-  provider,
-  redirectUrl,
-}: {
+type OAuthProviderProps = {
   provider: OAuthProviderType;
   redirectUrl?: string;
-}) {
+};
+
+function OAuthProvider({ provider, redirectUrl }: OAuthProviderProps) {
+  const auth = useService(AuthService);
   const { icon } = OAuthProviderMap[provider];
 
   const onClick = useCallback(() => {
-    const params = new URLSearchParams();
-
-    params.set('provider', provider);
-
-    if (redirectUrl) {
-      params.set('redirect_uri', redirectUrl);
+    async function preflight() {
+      if (ignore) return;
+      const url = await auth.oauthPreflight(
+        provider,
+        appInfo?.schema,
+        false,
+        redirectUrl
+      );
+      if (!ignore) {
+        popupWindow(url);
+      }
     }
 
-    if (BUILD_CONFIG.isElectron && appInfo) {
-      params.set('client', appInfo.schema);
-    }
-
-    const oauthUrl =
-      (BUILD_CONFIG.isElectron || BUILD_CONFIG.isIOS || BUILD_CONFIG.isAndroid
-        ? BUILD_CONFIG.serverUrlPrefix
-        : '') + `/oauth/login?${params.toString()}`;
-
-    popupWindow(oauthUrl);
-  }, [provider, redirectUrl]);
+    let ignore = false;
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    preflight();
+    return () => {
+      ignore = true;
+    };
+  }, [auth, provider]);
 
   return (
     <Button
