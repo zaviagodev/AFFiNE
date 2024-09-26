@@ -60,20 +60,28 @@ function OAuthProvider({ provider, redirectUrl }: OAuthProviderProps) {
   const onClick = useCallback(() => {
     async function preflight() {
       if (ignore) return;
-      const url = await auth.oauthPreflight(
-        provider,
-        appInfo?.schema,
-        false,
-        redirectUrl
-      );
-      if (!ignore) {
-        popupWindow(url);
+      try {
+        return await auth.oauthPreflight(
+          provider,
+          appInfo?.schema,
+          false,
+          redirectUrl
+        );
+      } catch {
+        return null;
       }
     }
 
     let ignore = false;
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    preflight();
+    preflight().then(url => {
+      // cover popup limit in safari
+      setTimeout(() => {
+        if (url && !ignore) {
+          popupWindow(url);
+        }
+      });
+    });
     return () => {
       ignore = true;
     };
