@@ -69,7 +69,7 @@ export class CloudBlobStorage implements BlobStorage {
       query: deleteBlobMutation,
       variables: {
         workspaceId: key,
-        hash: key,
+        key,
       },
     });
   }
@@ -81,6 +81,6 @@ export class CloudBlobStorage implements BlobStorage {
         workspaceId: this.workspaceId,
       },
     });
-    return result.listBlobs;
+    return result.workspace.blobs.map(blob => blob.key);
   }
 }
