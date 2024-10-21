@@ -343,6 +343,7 @@ __metadata:
     "@storybook/react": "npm:^8.2.9"
     "@storybook/react-vite": "npm:^8.2.9"
     "@testing-library/react": "npm:^16.0.0"
+    "@toeverything/pdf-viewer": "npm:^0.1.0"
     "@toeverything/theme": "npm:^1.0.11"
     "@types/react": "npm:^18.2.75"
     "@types/react-dom": "npm:^18.2.24"
@@ -351,6 +352,8 @@ __metadata:
     check-password-strength: "npm:^2.0.10"
     clsx: "npm:^2.1.0"
     dayjs: "npm:^1.11.10"
+    file-type: "npm:^19.1.0"
+    filesize: "npm:^10.1.6"
     jotai: "npm:^2.8.0"
     lit: "npm:^3.1.2"
     lodash-es: "npm:^4.17.21"
@@ -363,6 +366,7 @@ __metadata:
     react-paginate: "npm:^8.2.0"
     react-router-dom: "npm:^6.22.3"
     react-transition-state: "npm:^2.1.1"
+    react-virtuoso: "npm:^4.7.8"
     sonner: "npm:^1.4.41"
     storybook: "npm:^8.2.9"
     swr: "npm:^2.2.5"
@@ -373,7 +377,7 @@ __metadata:
     zod: "npm:^3.22.4"
   peerDependencies:
     "@blocksuite/affine": "*"
-    "@blocksuite/icons": 2.1.67
+    "@blocksuite/icons": "*"
   languageName: unknown
   linkType: soft
 
@@ -13390,6 +13394,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@toeverything/pdf-viewer-types@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@toeverything/pdf-viewer-types@npm:0.1.0"
+  checksum: 10/aed8a2e9375e121a663e96147d6a726d4dd7b4917cfa35bac5c422c820125b2bc3e129281cad8c3983d1da12191ba4c6e0e45231123fce5d89091ce18dbc9560
+  languageName: node
+  linkType: hard
+
+"@toeverything/pdf-viewer@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@toeverything/pdf-viewer@npm:0.1.0"
+  dependencies:
+    "@toeverything/pdf-viewer-types": "npm:0.1.0"
+    "@toeverything/pdfium": "npm:0.1.0"
+  checksum: 10/75e1df49ecce97e667ac9ec1a630ba4492f1b712d4380a9c999f05535e305e4fd2a069d004449477520ea308ec5928f02b51268659f75788ae4715a7b6e14da7
+  languageName: node
+  linkType: hard
+
+"@toeverything/pdfium@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@toeverything/pdfium@npm:0.1.0"
+  checksum: 10/5fee0f76608d27d747b9266096cdd153027e8f3e8774571524f86afd88757833a61472400df5dcf2a6ea2e16bcfe9864b090ef7e483c260998ba3fad418a9ba8
+  languageName: node
+  linkType: hard
+
 "@toeverything/theme@npm:^1.0.11, @toeverything/theme@npm:^1.0.15":
   version: 1.0.15
   resolution: "@toeverything/theme@npm:1.0.15"
@@ -20954,7 +20982,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"filesize@npm:^10.0.12":
+"filesize@npm:^10.0.12, filesize@npm:^10.1.6":
   version: 10.1.6
   resolution: "filesize@npm:10.1.6"
   checksum: 10/e800837c4fc02303f1944d5a4c7b706df1c5cd95d745181852604fb00a1c2d55d2d3921252722bd2f0c86b59c94edaba23fa224776bbf977455d4034e7be1f45

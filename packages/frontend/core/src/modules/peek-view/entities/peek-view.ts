@@ -1,5 +1,6 @@
 import type { BlockComponent, EditorHost } from '@blocksuite/affine/block-std';
 import type {
+  AttachmentBlockModel,
   DocMode,
   EmbedLinkedDocModel,
   EmbedSyncedDocModel,
@@ -51,6 +52,11 @@ export type ImagePeekViewInfo = {
   docRef: DocReferenceInfo;
 };
 
+export type AttachmentPeekViewInfo = {
+  type: 'attachment';
+  docRef: DocReferenceInfo;
+};
+
 export type AIChatBlockPeekViewInfo = {
   type: 'ai-chat-block';
   docRef: DocReferenceInfo;
@@ -68,6 +74,7 @@ export type ActivePeekView = {
   info:
     | DocPeekViewInfo
     | ImagePeekViewInfo
+    | AttachmentPeekViewInfo
     | CustomTemplatePeekViewInfo
     | AIChatBlockPeekViewInfo;
 };
@@ -88,6 +95,12 @@ const isImageBlockModel = (
   blockModel: BlockModel
 ): blockModel is ImageBlockModel => {
   return blockModel.flavour === 'affine:image';
+};
+
+const isAttachmentBlockModel = (
+  blockModel: BlockModel
+): blockModel is AttachmentBlockModel => {
+  return blockModel.flavour === 'affine:attachment';
 };
 
 const isSurfaceRefModel = (
@@ -162,6 +175,14 @@ function resolvePeekInfoFromPeekTarget(
             },
           };
         }
+      } else if (isAttachmentBlockModel(blockModel)) {
+        return {
+          type: 'attachment',
+          docRef: {
+            docId: blockModel.doc.id,
+            blockIds: [blockModel.id],
+          },
+        };
       } else if (isImageBlockModel(blockModel)) {
         return {
           type: 'image',
