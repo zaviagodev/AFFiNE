@@ -1,3 +1,4 @@
+use affine_schema::get_migrator;
 use chrono::NaiveDateTime;
 use napi::bindgen_prelude::{Buffer, Uint8Array};
 use napi_derive::napi;
@@ -67,13 +68,11 @@ impl SqliteConnection {
         .await
         .map_err(anyhow::Error::from)?;
     };
-    let mut connection = self.pool.acquire().await.map_err(anyhow::Error::from)?;
-    sqlx::query(affine_schema::SCHEMA)
-      .execute(connection.as_mut())
+    get_migrator()
+      .run(&self.pool)
       .await
       .map_err(anyhow::Error::from)?;
-    self.migrate_add_doc_id().await?;
-    self.migrate_add_doc_id_index().await?;
+    let connection = self.pool.acquire().await.map_err(anyhow::Error::from)?;
     connection.detach();
     Ok(())
   }

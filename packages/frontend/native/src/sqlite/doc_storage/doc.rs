@@ -1,23 +1,39 @@
-use chrono::{DateTime, NaiveDateTime};
+use chrono::NaiveDateTime;
 use sqlx::{QueryBuilder, Row};
 
 use super::storage::{Result, SqliteDocStorage};
 use super::{DocClock, DocRecord, DocUpdate};
 
 impl SqliteDocStorage {
-  pub async fn push_updates<Update: AsRef<[u8]>, Updates: AsRef<[Update]>>(
+  pub async fn push_update<Update: AsRef<[u8]>>(
     &self,
     doc_id: String,
-    updates: Updates,
-  ) -> Result<u32> {
-    let mut cnt = 0;
+    update: Update,
+  ) -> Result<NaiveDateTime> {
+    let timestamp = chrono::Utc::now().naive_utc();
+    let mut tx = self.pool.begin().await?;
 
-    for chunk in updates.as_ref().chunks(10) {
-      self.batch_push_updates(&doc_id, chunk).await?;
-      cnt += chunk.len() as u32;
-    }
+    sqlx::query(r#"INSERT INTO v2_updates (doc_id, data, created_at) VALUES ($1, $2, $3);"#)
+      .bind(&doc_id)
+      .bind(update.as_ref())
+      .bind(timestamp)
+      .execute(&mut *tx)
+      .await?;
 
-    Ok(cnt)
+    sqlx::query(
+      r#"
+    INSERT INTO v2_clocks (doc_id, timestamp) VALUES ($1, $2)
+    ON CONFLICT(doc_id)
+    DO UPDATE SET timestamp=$2;"#,
+    )
+    .bind(&doc_id)
+    .bind(timestamp)
+    .execute(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(timestamp)
   }
 
   pub async fn get_doc_snapshot(&self, doc_id: String) -> Result<Option<DocRecord>> {
@@ -81,42 +97,6 @@ impl SqliteDocStorage {
     Ok(result.rows_affected() as u32)
   }
 
-  async fn batch_push_updates<Update: AsRef<[u8]>>(
-    &self,
-    doc_id: &str,
-    updates: &[Update],
-  ) -> Result<()> {
-    let mut timestamp = chrono::Utc::now().timestamp_micros();
-
-    let mut qb = QueryBuilder::new("INSERT INTO v2_updates (doc_id, data, created_at) ");
-    qb.push_values(updates, |mut b, update| {
-      timestamp += 1;
-      b.push_bind(doc_id).push_bind(update.as_ref()).push_bind(
-        DateTime::from_timestamp_millis(timestamp)
-          .unwrap()
-          .naive_utc(),
-      );
-    });
-
-    let query = qb.build();
-
-    let mut tx = self.pool.begin().await?;
-    query.execute(&mut *tx).await?;
-
-    sqlx::query(
-      r#"
-    INSERT INTO v2_clocks (doc_id, timestamp) VALUES ($1, $2)
-    ON CONFLICT(doc_id)
-    DO UPDATE SET timestamp=$2;"#,
-    )
-    .bind(doc_id)
-    .bind(DateTime::from_timestamp_millis(timestamp).unwrap().to_utc())
-    .execute(&mut *tx)
-    .await?;
-
-    tx.commit().await
-  }
-
   pub async fn delete_doc(&self, doc_id: String) -> Result<()> {
     let mut tx = self.pool.begin().await?;
 
@@ -138,10 +118,9 @@ impl SqliteDocStorage {
     tx.commit().await
   }
 
-  pub async fn get_doc_clocks(&self, after: Option<i64>) -> Result<Vec<DocClock>> {
+  pub async fn get_doc_clocks(&self, after: Option<NaiveDateTime>) -> Result<Vec<DocClock>> {
     let query = if let Some(after) = after {
-      sqlx::query("SELECT doc_id, timestamp FROM v2_clocks WHERE timestamp > $1")
-        .bind(DateTime::from_timestamp_millis(after).unwrap().naive_utc())
+      sqlx::query("SELECT doc_id, timestamp FROM v2_clocks WHERE timestamp > $1").bind(after)
     } else {
       sqlx::query("SELECT doc_id, timestamp FROM v2_clocks")
     };
@@ -162,15 +141,14 @@ impl SqliteDocStorage {
 
 #[cfg(test)]
 mod tests {
-  use chrono::Utc;
-  use napi::bindgen_prelude::Buffer;
+  use chrono::{DateTime, Utc};
+  use napi::bindgen_prelude::Uint8Array;
 
   use super::*;
 
   async fn get_storage() -> SqliteDocStorage {
     let storage = SqliteDocStorage::new(":memory:".to_string());
     storage.connect().await.unwrap();
-    storage.test_migrate().await.unwrap();
 
     storage
   }
@@ -202,10 +180,12 @@ mod tests {
 
     let updates = vec![vec![0, 0], vec![0, 1], vec![1, 0], vec![1, 1]];
 
-    storage
-      .push_updates("test".to_string(), &updates)
-      .await
-      .unwrap();
+    for update in updates.iter() {
+      storage
+        .push_update("test".to_string(), update)
+        .await
+        .unwrap();
+    }
 
     let result = storage.get_doc_updates("test".to_string()).await.unwrap();
 
@@ -226,7 +206,7 @@ mod tests {
 
     let snapshot = DocRecord {
       doc_id: "test".to_string(),
-      data: Buffer::from(vec![0, 0]),
+      data: Uint8Array::from(vec![0, 0]),
       timestamp: Utc::now().naive_utc(),
     };
 
@@ -244,7 +224,7 @@ mod tests {
 
     let snapshot = DocRecord {
       doc_id: "test".to_string(),
-      data: Buffer::from(vec![0, 0]),
+      data: Uint8Array::from(vec![0, 0]),
       timestamp: Utc::now().naive_utc(),
     };
 
@@ -257,7 +237,7 @@ mod tests {
 
     let snapshot = DocRecord {
       doc_id: "test".to_string(),
-      data: Buffer::from(vec![0, 1]),
+      data: Uint8Array::from(vec![0, 1]),
       timestamp: DateTime::from_timestamp_millis(Utc::now().timestamp_millis() - 1000)
         .unwrap()
         .naive_utc(),
@@ -280,10 +260,9 @@ mod tests {
 
     assert_eq!(clocks.len(), 0);
 
-    // where is join_all()?
     for i in 1..5u32 {
       storage
-        .push_updates(format!("test_{i}"), vec![vec![0, 0]])
+        .push_update(format!("test_{i}"), vec![0, 0])
         .await
         .unwrap();
     }
@@ -297,7 +276,7 @@ mod tests {
     );
 
     let clocks = storage
-      .get_doc_clocks(Some(Utc::now().timestamp_millis()))
+      .get_doc_clocks(Some(Utc::now().naive_utc()))
       .await
       .unwrap();
 
@@ -308,13 +287,14 @@ mod tests {
   async fn mark_updates_merged() {
     let storage = get_storage().await;
 
-    storage
-      .push_updates(
-        "test".to_string(),
-        vec![vec![0, 0], vec![0, 1], vec![1, 0], vec![1, 1]],
-      )
-      .await
-      .unwrap();
+    let updates = [vec![0, 0], vec![0, 1], vec![1, 0], vec![1, 1]];
+
+    for update in updates.iter() {
+      storage
+        .push_update("test".to_string(), update)
+        .await
+        .unwrap();
+    }
 
     let updates = storage.get_doc_updates("test".to_string()).await.unwrap();
 

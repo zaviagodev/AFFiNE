@@ -1,66 +1,62 @@
-import type { DocStorage as NativeDocStorage } from '@affine/native';
-
+import { share } from '../../connection';
+import type { OpHandler } from '../../op';
 import {
+  type DocClocks,
   type DocRecord,
   DocStorage,
   type DocStorageOptions,
-  type DocUpdate,
+  type GetDocSnapshotOp,
 } from '../../storage';
+import type {
+  DeleteDocOp,
+  GetDocTimestampsOp,
+  PushDocUpdateOp,
+} from '../../storage/ops';
+import { NativeDBConnection } from './db';
 
 interface SqliteDocStorageOptions extends DocStorageOptions {
-  db: NativeDocStorage;
+  dbPath: string;
 }
 
 export class SqliteDocStorage extends DocStorage<SqliteDocStorageOptions> {
   get name() {
     return 'sqlite';
   }
+  override connection = share(new NativeDBConnection(this.options.dbPath));
 
   get db() {
-    return this.options.db;
+    return this.connection.inner;
   }
 
-  protected override doConnect(): Promise<void> {
-    return Promise.resolve();
-  }
+  override pushDocUpdate: OpHandler<PushDocUpdateOp> = async ({
+    docId,
+    bin,
+  }) => {
+    const timestamp = await this.db.pushUpdate(docId, bin);
 
-  protected override doDisconnect(): Promise<void> {
-    return Promise.resolve();
-  }
+    return { docId, timestamp };
+  };
 
-  override pushDocUpdates(
-    docId: string,
-    updates: Uint8Array[]
-  ): Promise<number> {
-    return this.db.pushUpdates(docId, updates);
-  }
+  override deleteDoc: OpHandler<DeleteDocOp> = async ({ docId }) => {
+    await this.db.deleteDoc(docId);
+  };
 
-  override deleteDoc(docId: string): Promise<void> {
-    return this.db.deleteDoc(docId);
-  }
-
-  override async deleteSpace(): Promise<void> {
-    await this.disconnect();
-    // rm this.dbPath
-  }
-
-  override async getSpaceDocTimestamps(
-    after?: number
-  ): Promise<Record<string, number> | null> {
-    const clocks = await this.db.getDocClocks(after);
-
-    return clocks.reduce(
-      (ret, cur) => {
-        ret[cur.docId] = cur.timestamp.getTime();
-        return ret;
-      },
-      {} as Record<string, number>
+  override getDocTimestamps: OpHandler<GetDocTimestampsOp> = async ({
+    after,
+  }) => {
+    const clocks = await this.db.getDocClocks(
+      after ? new Date(after) : undefined
     );
-  }
 
-  protected override async getDocSnapshot(
-    docId: string
-  ): Promise<DocRecord | null> {
+    return clocks.reduce((ret, cur) => {
+      ret[cur.docId] = cur.timestamp;
+      return ret;
+    }, {} as DocClocks);
+  };
+
+  protected override getDocSnapshot: OpHandler<GetDocSnapshotOp> = async ({
+    docId,
+  }) => {
     const snapshot = await this.db.getDocSnapshot(docId);
 
     if (!snapshot) {
@@ -68,12 +64,11 @@ export class SqliteDocStorage extends DocStorage<SqliteDocStorageOptions> {
     }
 
     return {
-      spaceId: this.spaceId,
       docId,
       bin: snapshot.data,
-      timestamp: snapshot.timestamp.getTime(),
+      timestamp: snapshot.timestamp,
     };
-  }
+  };
 
   protected override setDocSnapshot(snapshot: DocRecord): Promise<boolean> {
     return this.db.setDocSnapshot({
@@ -83,33 +78,20 @@ export class SqliteDocStorage extends DocStorage<SqliteDocStorageOptions> {
     });
   }
 
-  protected override async getDocUpdates(docId: string): Promise<DocUpdate[]> {
+  protected override async getDocUpdates(docId: string) {
     return this.db.getDocUpdates(docId).then(updates =>
       updates.map(update => ({
+        docId,
         bin: update.data,
-        timestamp: update.createdAt.getTime(),
+        timestamp: update.createdAt,
       }))
     );
   }
 
-  protected override markUpdatesMerged(
-    docId: string,
-    updates: DocUpdate[]
-  ): Promise<number> {
+  protected override markUpdatesMerged(docId: string, updates: DocRecord[]) {
     return this.db.markUpdatesMerged(
       docId,
-      updates.map(update => new Date(update.timestamp))
+      updates.map(update => update.timestamp)
     );
-  }
-
-  override async listDocHistories() {
-    return [];
-  }
-  override async getDocHistory() {
-    return null;
-  }
-
-  protected override async createDocHistory(): Promise<boolean> {
-    return false;
   }
 }

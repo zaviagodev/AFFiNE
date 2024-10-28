@@ -1,9 +1,8 @@
-use std::path::PathBuf;
-
+use affine_schema::get_migrator;
 use sqlx::{
-  migrate::{MigrateDatabase, Migrator},
+  migrate::MigrateDatabase,
   sqlite::{Sqlite, SqliteConnectOptions, SqlitePoolOptions},
-  ConnectOptions, Pool,
+  Pool,
 };
 
 pub type Result<T> = std::result::Result<T, sqlx::Error>;
@@ -43,19 +42,13 @@ impl SqliteDocStorage {
       Sqlite::create_database(&self.path).await?;
     };
 
-    Ok(())
-  }
-
-  #[cfg(test)]
-  pub async fn test_migrate(&self) -> Result<()> {
-    let migrator = Migrator::new(std::env::current_dir().unwrap().join("migrations")).await?;
-    migrator.run(&self.pool).await?;
+    self.migrate().await?;
 
     Ok(())
   }
 
-  pub async fn migrate(&self, migrations: PathBuf) -> Result<()> {
-    let migrator = Migrator::new(migrations.as_path()).await?;
+  async fn migrate(&self) -> Result<()> {
+    let migrator = get_migrator();
     migrator.run(&self.pool).await?;
 
     Ok(())
@@ -89,7 +82,6 @@ mod tests {
   async fn get_storage() -> SqliteDocStorage {
     let storage = SqliteDocStorage::new(":memory:".to_string());
     storage.connect().await.unwrap();
-    storage.test_migrate().await.unwrap();
 
     storage
   }

@@ -1,4 +1,10 @@
-import type { Socket as SocketIO } from 'socket.io-client';
+import {
+  Manager as SocketIOManager,
+  type Socket as SocketIO,
+  type SocketOptions,
+} from 'socket.io-client';
+
+import { Connection } from '../../connection';
 
 // TODO(@forehalo): use [UserFriendlyError]
 interface EventError {
@@ -15,12 +21,13 @@ type WebsocketResponse<T> =
     };
 
 interface ServerEvents {
-  'space:broadcast-doc-updates': {
+  'space:broadcast-doc-update': {
     spaceType: string;
     spaceId: string;
     docId: string;
-    updates: string[];
+    update: string;
     timestamp: number;
+    editor: string;
   };
 }
 
@@ -45,8 +52,8 @@ interface ClientEvents {
     docId: string;
   };
 
-  'space:push-doc-updates': [
-    { spaceType: string; spaceId: string; docId: string; updates: string[] },
+  'space:push-doc-update': [
+    { spaceType: string; spaceId: string; docId: string; updates: string },
     { timestamp: number },
   ];
   'space:load-doc-timestamps': [
@@ -114,4 +121,43 @@ export function base64ToUint8Array(base64: string) {
     return char.charCodeAt(0);
   });
   return new Uint8Array(binaryArray);
+}
+
+export class SocketConnection extends Connection<Socket> {
+  manager = new SocketIOManager(this.endpoint, {
+    autoConnect: false,
+    transports: ['websocket'],
+    secure: new URL(this.endpoint).protocol === 'https:',
+  });
+
+  constructor(
+    private readonly endpoint: string,
+    private readonly socketOptions: SocketOptions
+  ) {
+    super();
+  }
+
+  override get shareId() {
+    return `socket:${this.endpoint}`;
+  }
+
+  override async doConnect() {
+    const conn = this.manager.socket('/', this.socketOptions);
+
+    await new Promise<void>((resolve, reject) => {
+      conn.once('connect', () => {
+        resolve();
+      });
+      conn.once('connect_error', err => {
+        reject(err);
+      });
+      conn.open();
+    });
+
+    return conn;
+  }
+
+  override async doDisconnect(conn: Socket) {
+    conn.close();
+  }
 }

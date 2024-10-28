@@ -7,7 +7,7 @@ impl SqliteDocStorage {
   pub async fn get_peer_clocks(&self, peer: String) -> Result<Vec<DocClock>> {
     sqlx::query_as!(
       DocClock,
-      "SELECT doc_id, clock as timestamp FROM v2_peer_clocks WHERE peer = ?",
+      "SELECT doc_id, timestamp FROM v2_peer_clocks WHERE peer = ?",
       peer
     )
     .fetch_all(&self.pool)
@@ -22,10 +22,10 @@ impl SqliteDocStorage {
   ) -> Result<()> {
     sqlx::query(
       r#"
-      INSERT INTO v2_peer_clocks (peer, doc_id, clock, pushed_clock)
+      INSERT INTO v2_peer_clocks (peer, doc_id, timestamp, pushed_timestamp)
       VALUES ($1, $2, $3, 0)
       ON CONFLICT(peer, doc_id)
-      DO UPDATE SET clock=$3 WHERE clock < $3;"#,
+      DO UPDATE SET timestamp=$3 WHERE timestamp < $3;"#,
     )
     .bind(peer)
     .bind(doc_id)
@@ -39,7 +39,7 @@ impl SqliteDocStorage {
   pub async fn get_peer_pushed_clocks(&self, peer: String) -> Result<Vec<DocClock>> {
     sqlx::query_as!(
       DocClock,
-      "SELECT doc_id, pushed_clock as timestamp FROM v2_peer_clocks WHERE peer = ?",
+      "SELECT doc_id, pushed_timestamp as timestamp FROM v2_peer_clocks WHERE peer = ?",
       peer
     )
     .fetch_all(&self.pool)
@@ -54,16 +54,24 @@ impl SqliteDocStorage {
   ) -> Result<()> {
     sqlx::query(
       r#"
-      INSERT INTO v2_peer_clocks (peer, doc_id, clock, pushed_clock)
+      INSERT INTO v2_peer_clocks (peer, doc_id, timestamp, pushed_timestamp)
       VALUES ($1, $2, 0, $3)
       ON CONFLICT(peer, doc_id)
-      DO UPDATE SET pushed_clock=$3 WHERE pushed_clock < $3;"#,
+      DO UPDATE SET pushed_timestamp=$3 WHERE pushed_timestamp < $3;"#,
     )
     .bind(peer)
     .bind(doc_id)
     .bind(clock)
     .execute(&self.pool)
     .await?;
+
+    Ok(())
+  }
+
+  pub async fn clear_clocks(&self) -> Result<()> {
+    sqlx::query("DELETE FROM v2_peer_clocks;")
+      .execute(&self.pool)
+      .await?;
 
     Ok(())
   }
@@ -79,7 +87,6 @@ mod tests {
   async fn get_storage() -> SqliteDocStorage {
     let storage = SqliteDocStorage::new(":memory:".to_string());
     storage.connect().await.unwrap();
-    storage.test_migrate().await.unwrap();
 
     storage
   }
@@ -150,7 +157,7 @@ mod tests {
       .unwrap();
 
     assert_eq!(
-      record.get::<NaiveDateTime, &str>("pushed_clock"),
+      record.get::<NaiveDateTime, &str>("pushed_timestamp"),
       DateTime::from_timestamp(0, 0).unwrap().naive_utc()
     );
 
@@ -161,8 +168,37 @@ mod tests {
       .await
       .unwrap();
     assert_eq!(
-      record.get::<NaiveDateTime, &str>("clock"),
+      record.get::<NaiveDateTime, &str>("timestamp"),
       DateTime::from_timestamp(0, 0).unwrap().naive_utc()
     );
+  }
+
+  #[tokio::test]
+  async fn clear_clocks() {
+    let storage = get_storage().await;
+    let peer = String::from("peer1");
+
+    storage
+      .set_peer_clock(peer.clone(), "doc1".to_string(), Utc::now().naive_utc())
+      .await
+      .unwrap();
+    storage
+      .set_peer_pushed_clock(peer.clone(), "doc2".to_string(), Utc::now().naive_utc())
+      .await
+      .unwrap();
+
+    let clocks = storage.get_peer_clocks(peer.clone()).await.unwrap();
+    assert_eq!(clocks.len(), 2);
+
+    let clocks = storage.get_peer_pushed_clocks(peer.clone()).await.unwrap();
+    assert_eq!(clocks.len(), 2);
+
+    storage.clear_clocks().await.unwrap();
+
+    let clocks = storage.get_peer_clocks(peer.clone()).await.unwrap();
+    assert!(clocks.is_empty());
+
+    let clocks = storage.get_peer_pushed_clocks(peer.clone()).await.unwrap();
+    assert!(clocks.is_empty());
   }
 }

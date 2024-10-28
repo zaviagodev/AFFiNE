@@ -1,27 +1,40 @@
 import { type IDBPDatabase, openDB } from 'idb';
 
-import { type DocStorageSchema, latestVersion, migrate } from './schema';
+import { Connection } from '../../connection';
+import { type DocStorageSchema, migrator } from './schema';
 
-export type SpaceIDB = IDBPDatabase<DocStorageSchema>;
+export class IDBConnection extends Connection<IDBPDatabase<DocStorageSchema>> {
+  override get shareId() {
+    return `idb(${migrator.version}):${this.dbName}`;
+  }
 
-export const IDBProtocol = {
-  async open(name: string) {
-    let db: SpaceIDB | null = null;
-    const blocking = () => {
-      // notify user this connection is blocking other tabs to upgrade db
-      db?.close();
-    };
+  constructor(private readonly dbName: string) {
+    super();
+  }
 
-    const blocked = () => {
-      // notify user there is tab opened with old version, close it first
-    };
-
-    db = await openDB<DocStorageSchema>(name, latestVersion, {
-      upgrade: migrate,
-      blocking,
-      blocked,
+  override async doConnect() {
+    return openDB<DocStorageSchema>(this.dbName, migrator.version, {
+      upgrade: migrator.migrate,
+      blocking: () => {
+        // if, for example, an tab with newer version is opened, this function will be called.
+        // we should close current connection to allow the new version to upgrade the db.
+        this.close(
+          new Error('Blocking a new version. Closing the connection.')
+        );
+      },
+      blocked: () => {
+        // fallback to retry auto retry
+        this.setStatus('error', new Error('Blocked by other tabs.'));
+      },
     });
+  }
 
-    return db;
-  },
-};
+  override async doDisconnect() {
+    this.close();
+  }
+
+  private close(error?: Error) {
+    this.maybeConnection?.close();
+    this.setStatus('closed', error);
+  }
+}

@@ -1,4 +1,5 @@
-import type { DBSchema, OpenDBCallbacks } from 'idb';
+import { type DBSchema, type OpenDBCallbacks } from 'idb';
+
 /**
 IndexedDB
   > DB(workspace:${workspaceId})
@@ -9,22 +10,22 @@ IndexedDB
 Table(Snapshots)
 | docId | blob | createdAt | updatedAt |
 |-------|------|-----------|-----------|
-|  str  | bin  | timestamp | timestamp |
+|  str  | bin  |   Date    |   Date    |
 
 Table(Updates)
 | id | docId | blob | createdAt |
 |----|-------|------|-----------|
-|auto|  str  | bin  | timestamp |
+|auto|  str  | bin  |   Date    |
 
 Table(Clocks)
 | docId |   clock   |
 |-------|-----------|
-|  str  | timestamp |
+|  str  |   Date    |
 
 Table(Blobs)
 | key | mime | size | createdAt | deletedAt |
 |-----|------|------|-----------|-----------|
-| str |  str | num  | timestamp | timestamp |
+| str |  str | num  |   Date    |   Date    |
 
 Table(BlobData)
 | key | data |
@@ -34,7 +35,7 @@ Table(BlobData)
 Table(PeerClocks)
 | peer | docId |   clock   |  pushed   |
 |------|-------|-----------|-----------|
-| str  |  str  | timestamp | timestamp |
+| str  |  str  |   Date    |   Date    |
  */
 export interface DocStorageSchema extends DBSchema {
   snapshots: {
@@ -42,19 +43,19 @@ export interface DocStorageSchema extends DBSchema {
     value: {
       docId: string;
       bin: Uint8Array;
-      createdAt: number;
-      updatedAt: number;
+      createdAt: Date;
+      updatedAt: Date;
     };
     indexes: {
-      updatedAt: number;
+      updatedAt: Date;
     };
   };
   updates: {
-    key: [string, number];
+    key: [string, Date];
     value: {
       docId: string;
       bin: Uint8Array;
-      createdAt: number;
+      createdAt: Date;
     };
     indexes: {
       docId: string;
@@ -64,10 +65,10 @@ export interface DocStorageSchema extends DBSchema {
     key: string;
     value: {
       docId: string;
-      timestamp: number;
+      timestamp: Date;
     };
     indexes: {
-      timestamp: number;
+      timestamp: Date;
     };
   };
   blobs: {
@@ -76,15 +77,15 @@ export interface DocStorageSchema extends DBSchema {
       key: string;
       mime: string;
       size: number;
-      createdAt: number;
-      deletedAt: number | null;
+      createdAt: Date;
+      deletedAt: Date | null;
     };
   };
   blobData: {
     key: string;
     value: {
       key: string;
-      data: ArrayBuffer;
+      data: Uint8Array;
     };
   };
   peerClocks: {
@@ -92,8 +93,8 @@ export interface DocStorageSchema extends DBSchema {
     value: {
       peer: string;
       docId: string;
-      clock: number;
-      pushedClock: number;
+      clock: Date;
+      pushedClock: Date;
     };
     indexes: {
       peer: string;
@@ -101,7 +102,7 @@ export interface DocStorageSchema extends DBSchema {
   };
 }
 
-export const migrate: OpenDBCallbacks<DocStorageSchema>['upgrade'] = (
+const migrate: OpenDBCallbacks<DocStorageSchema>['upgrade'] = (
   db,
   oldVersion,
   _newVersion,
@@ -164,7 +165,10 @@ const init: Migrate = db => {
 // END REGION
 
 // 1. all schema changed should be put in migrations
-// 2.order matters
+// 2. order matters
 const migrations: Migrate[] = [init];
 
-export const latestVersion = migrations.length;
+export const migrator = {
+  version: migrations.length,
+  migrate,
+};

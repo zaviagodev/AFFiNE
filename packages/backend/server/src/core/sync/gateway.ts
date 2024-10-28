@@ -82,11 +82,21 @@ interface LeaveSpaceAwarenessMessage {
   docId: string;
 }
 
+/**
+ * @deprecated
+ */
 interface PushDocUpdatesMessage {
   spaceType: SpaceType;
   spaceId: string;
   docId: string;
   updates: string[];
+}
+
+interface PushDocUpdateMessage {
+  spaceType: SpaceType;
+  spaceId: string;
+  docId: string;
+  update: string;
 }
 
 interface LoadDocMessage {
@@ -237,6 +247,9 @@ export class SpaceSyncGateway
     };
   }
 
+  /**
+   * @deprecated use [space:push-doc-update] instead, client should always merge updates on their own
+   */
   @SubscribeMessage('space:push-doc-updates')
   async onReceiveDocUpdates(
     @ConnectedSocket() client: Socket,
@@ -272,6 +285,51 @@ export class SpaceSyncGateway
         timestamp,
       });
     }
+
+    return {
+      data: {
+        accepted: true,
+        timestamp,
+      },
+    };
+  }
+
+  @SubscribeMessage('space:push-doc-update')
+  async onReceiveDocUpdate(
+    @ConnectedSocket() client: Socket,
+    @CurrentUser() user: CurrentUser,
+    @MessageBody()
+    message: PushDocUpdateMessage
+  ): Promise<EventResponse<{ accepted: true; timestamp?: number }>> {
+    const { spaceType, spaceId, docId, update } = message;
+    const adapter = this.selectAdapter(client, spaceType);
+
+    // TODO(@forehalo): we might need to check write permission before push updates
+    const timestamp = await adapter.push(
+      spaceId,
+      docId,
+      [Buffer.from(update, 'base64')],
+      user.id
+    );
+
+    // TODO(@forehalo): separate different version of clients into different rooms,
+    // so the clients won't receive useless updates events
+    client.to(adapter.room(spaceId)).emit('space:broadcast-doc-updates', {
+      spaceType,
+      spaceId,
+      docId,
+      updates: [update],
+      timestamp,
+    });
+
+    client.to(adapter.room(spaceId)).emit('space:broadcast-doc-update', {
+      spaceType,
+      spaceId,
+      docId,
+      update,
+      timestamp,
+      editor: user.id,
+    });
 
     return {
       data: {

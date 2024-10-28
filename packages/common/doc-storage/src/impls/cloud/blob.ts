@@ -6,30 +6,26 @@ import {
   setBlobMutation,
 } from '@affine/graphql';
 
-import {
-  type BlobRecord as BlobType,
-  BlobStorage,
-  type BlobStorageOptions,
-  type ListedBlobRecord,
-} from '../../storage';
+import { DummyConnection } from '../../connection';
+import type { OpHandler } from '../../op';
+import { BlobStorage, type BlobStorageOptions } from '../../storage';
+import type {
+  DeleteBlobOp,
+  GetBlobOp,
+  ListBlobsOp,
+  ReleaseBlobsOp,
+  SetBlobOp,
+} from '../../storage/ops';
 
-// TODO(@forehalo): websocket?
 interface CloudBlobStorageOptions extends BlobStorageOptions {
   endpoint: string;
 }
 
 export class CloudBlobStorage extends BlobStorage<CloudBlobStorageOptions> {
   private readonly gql = gqlFetcherFactory(this.options.endpoint + '/graphql');
+  override connection = new DummyConnection();
 
-  override async doConnect() {
-    return;
-  }
-
-  override async doDisconnect() {
-    return;
-  }
-
-  override async getBlob(key: string): Promise<BlobType | null> {
+  override get: OpHandler<GetBlobOp> = async ({ key }) => {
     const res = await fetch(
       this.options.endpoint +
         '/api/workspaces/' +
@@ -50,13 +46,11 @@ export class CloudBlobStorage extends BlobStorage<CloudBlobStorageOptions> {
       data: new Uint8Array(data),
       mime: res.headers.get('content-type') || '',
       size: data.byteLength,
-      createdAt: new Date(
-        res.headers.get('last-modified') || Date.now()
-      ).getTime(),
+      createdAt: new Date(res.headers.get('last-modified') || Date.now()),
     };
-  }
+  };
 
-  override async setBlob(blob: BlobType): Promise<void> {
+  override set: OpHandler<SetBlobOp> = async blob => {
     await this.gql({
       query: setBlobMutation,
       variables: {
@@ -64,23 +58,23 @@ export class CloudBlobStorage extends BlobStorage<CloudBlobStorageOptions> {
         blob: new File([blob.data], blob.key, { type: blob.mime }),
       },
     });
-  }
+  };
 
-  override async deleteBlob(key: string, permanently: boolean): Promise<void> {
+  override delete: OpHandler<DeleteBlobOp> = async ({ key, permanently }) => {
     await this.gql({
       query: deleteBlobMutation,
       variables: { workspaceId: this.spaceId, key, permanently },
     });
-  }
+  };
 
-  override async releaseBlobs(): Promise<void> {
+  override release: OpHandler<ReleaseBlobsOp> = async () => {
     await this.gql({
       query: releaseDeletedBlobsMutation,
       variables: { workspaceId: this.spaceId },
     });
-  }
+  };
 
-  override async listBlobs(): Promise<ListedBlobRecord[]> {
+  override list: OpHandler<ListBlobsOp> = async () => {
     const res = await this.gql({
       query: listBlobsQuery,
       variables: { workspaceId: this.spaceId },
@@ -88,7 +82,7 @@ export class CloudBlobStorage extends BlobStorage<CloudBlobStorageOptions> {
 
     return res.workspace.blobs.map(blob => ({
       ...blob,
-      createdAt: new Date(blob.createdAt).getTime(),
+      createdAt: new Date(blob.createdAt),
     }));
-  }
+  };
 }

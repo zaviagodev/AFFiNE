@@ -1,60 +1,43 @@
-import type { DocStorage as NativeDocStorage } from '@affine/native';
-
-import {
-  type BlobRecord,
-  BlobStorage,
-  type BlobStorageOptions,
-  type ListedBlobRecord,
-} from '../../storage';
+import { share } from '../../connection';
+import type { OpHandler } from '../../op';
+import { BlobStorage, type BlobStorageOptions } from '../../storage';
+import type {
+  DeleteBlobOp,
+  GetBlobOp,
+  ListBlobsOp,
+  ReleaseBlobsOp,
+  SetBlobOp,
+} from '../../storage/ops';
+import { NativeDBConnection } from './db';
 
 interface SqliteBlobStorageOptions extends BlobStorageOptions {
-  db: NativeDocStorage;
+  dbPath: string;
 }
 
 export class SqliteBlobStorage extends BlobStorage<SqliteBlobStorageOptions> {
+  override connection = share(new NativeDBConnection(this.options.dbPath));
+
   get db() {
-    return this.options.db;
+    return this.connection.inner;
   }
 
-  protected override doConnect(): Promise<void> {
-    return Promise.resolve();
-  }
-  protected override doDisconnect(): Promise<void> {
-    return Promise.resolve();
-  }
+  override get: OpHandler<GetBlobOp> = async ({ key }) => {
+    return this.db.getBlob(key);
+  };
 
-  override async getBlob(key: string): Promise<BlobRecord | null> {
-    const blob = await this.db.getBlob(key);
+  override set: OpHandler<SetBlobOp> = async blob => {
+    await this.db.setBlob(blob);
+  };
 
-    if (!blob) {
-      return null;
-    }
+  override delete: OpHandler<DeleteBlobOp> = async ({ key, permanently }) => {
+    await this.db.deleteBlob(key, permanently);
+  };
 
-    return {
-      ...blob,
-      data: blob.data.buffer,
-      createdAt: blob.createdAt.getTime(),
-    };
-  }
-  override setBlob(blob: BlobRecord): Promise<void> {
-    return this.db.setBlob({
-      ...blob,
-      data: Buffer.from(blob.data),
-    });
-  }
-  override deleteBlob(key: string, permanently: boolean): Promise<void> {
-    return this.db.deleteBlob(key, permanently);
-  }
-  override releaseBlobs(): Promise<void> {
-    return this.db.releaseBlobs();
-  }
+  override release: OpHandler<ReleaseBlobsOp> = async () => {
+    await this.db.releaseBlobs();
+  };
 
-  override async listBlobs(): Promise<ListedBlobRecord[]> {
-    const blobs = await this.db.listBlobs();
-
-    return blobs.map(blob => ({
-      ...blob,
-      createdAt: blob.createdAt.getTime(),
-    }));
-  }
+  override list: OpHandler<ListBlobsOp> = async () => {
+    return this.db.listBlobs();
+  };
 }

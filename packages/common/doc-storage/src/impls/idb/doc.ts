@@ -1,80 +1,63 @@
+import { share } from '../../connection';
+import type { OpHandler } from '../../op';
 import {
+  type DocClocks,
   type DocRecord,
   DocStorage,
   type DocStorageOptions,
-  type DocUpdate,
+  type GetDocSnapshotOp,
 } from '../../storage';
-import { type SpaceIDB } from './db';
+import type {
+  DeleteDocOp,
+  GetDocTimestampsOp,
+  PushDocUpdateOp,
+} from '../../storage/ops';
+import { IDBConnection } from './db';
 
 export interface IndexedDBDocStorageOptions extends DocStorageOptions {
-  db: SpaceIDB;
+  dbName: string;
 }
 
 export class IndexedDBDocStorage extends DocStorage<IndexedDBDocStorageOptions> {
+  readonly connection = share(new IDBConnection(this.options.dbName));
+
+  get db() {
+    return this.connection.inner;
+  }
+
   get name() {
     return 'idb';
   }
 
-  get db() {
-    return this.options.db;
-  }
-
-  protected override doConnect(): Promise<void> {
-    return Promise.resolve();
-  }
-  protected override doDisconnect(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  override async pushDocUpdates(
-    docId: string,
-    updates: Uint8Array[]
-  ): Promise<number> {
-    if (!updates.length) {
-      return 0;
-    }
-
+  override pushDocUpdate: OpHandler<PushDocUpdateOp> = async update => {
     const trx = this.db.transaction(['updates', 'clocks'], 'readwrite');
+    const timestamp = new Date();
+    await trx.objectStore('updates').add({
+      ...update,
+      createdAt: timestamp,
+    });
 
-    const timestamp = Date.now();
-    await Promise.all(
-      updates.map(async (update, i) => {
-        await trx.objectStore('updates').add({
-          docId,
-          bin: update,
-          createdAt: timestamp + i,
-        });
-      })
-    );
+    await trx.objectStore('clocks').put({ docId: update.docId, timestamp });
 
-    await trx
-      .objectStore('clocks')
-      .put({ docId, timestamp: timestamp + updates.length - 1 });
-    trx.commit();
+    return { docId: update.docId, timestamp };
+  };
 
-    return updates.length;
-  }
-
-  protected override async getDocSnapshot(
-    docId: string
-  ): Promise<DocRecord | null> {
+  protected getDocSnapshot: OpHandler<GetDocSnapshotOp> = async ({ docId }) => {
     const trx = this.db.transaction('snapshots', 'readonly');
     const record = await trx.store.get(docId);
-    trx.commit();
 
     if (!record) {
       return null;
     }
 
     return {
-      spaceId: this.spaceId,
       docId,
       bin: record.bin,
       timestamp: record.updatedAt,
     };
-  }
+  };
 
-  override async deleteDoc(docId: string): Promise<void> {
+  override deleteDoc: OpHandler<DeleteDocOp> = async ({ docId }) => {
     const trx = this.db.transaction(
       ['snapshots', 'updates', 'clocks'],
       'readwrite'
@@ -89,30 +72,22 @@ export class IndexedDBDocStorage extends DocStorage<IndexedDBDocStorageOptions> 
 
     await trx.objectStore('snapshots').delete(docId);
     await trx.objectStore('clocks').delete(docId);
-    trx.commit();
-  }
+  };
 
-  override async deleteSpace(): Promise<void> {
-    for (const name of this.db.objectStoreNames) {
-      await this.db.clear(name);
-    }
-  }
-
-  override async getSpaceDocTimestamps(
-    after: number = 0
-  ): Promise<Record<string, number>> {
+  override getDocTimestamps: OpHandler<GetDocTimestampsOp> = async ({
+    after = 0,
+  }) => {
     const trx = this.db.transaction('clocks', 'readonly');
-    const record: Record<string, number> = {};
 
-    const iter = trx.store.iterate(IDBKeyRange.lowerBound(after));
+    const clocks = await trx.store.getAll();
 
-    for await (const { value } of iter) {
-      record[value.docId] = value.timestamp;
-    }
-
-    trx.commit();
-    return record;
-  }
+    return clocks.reduce((ret, cur) => {
+      if (cur.timestamp > after) {
+        ret[cur.docId] = cur.timestamp;
+      }
+      return ret;
+    }, {} as DocClocks);
+  };
 
   protected override async setDocSnapshot(
     snapshot: DocRecord
@@ -133,13 +108,12 @@ export class IndexedDBDocStorage extends DocStorage<IndexedDBDocStorageOptions> 
     return true;
   }
 
-  protected override async getDocUpdates(docId: string): Promise<DocUpdate[]> {
+  protected override async getDocUpdates(docId: string): Promise<DocRecord[]> {
     const trx = this.db.transaction('updates', 'readonly');
     const updates = await trx.store.index('docId').getAll(docId);
 
-    trx.commit();
-
     return updates.map(update => ({
+      docId,
       bin: update.bin,
       timestamp: update.createdAt,
     }));
@@ -147,7 +121,7 @@ export class IndexedDBDocStorage extends DocStorage<IndexedDBDocStorageOptions> 
 
   protected override async markUpdatesMerged(
     docId: string,
-    updates: DocUpdate[]
+    updates: DocRecord[]
   ): Promise<number> {
     const trx = this.db.transaction('updates', 'readwrite');
 
@@ -157,19 +131,5 @@ export class IndexedDBDocStorage extends DocStorage<IndexedDBDocStorageOptions> 
 
     trx.commit();
     return updates.length;
-  }
-
-  // history is not supported by idb yet
-  override listDocHistories() {
-    return Promise.resolve([]);
-  }
-  override getDocHistory() {
-    return Promise.resolve(null);
-  }
-  override rollbackDoc() {
-    return Promise.resolve();
-  }
-  protected override createDocHistory() {
-    return Promise.resolve(false);
   }
 }

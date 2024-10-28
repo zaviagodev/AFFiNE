@@ -1,28 +1,31 @@
+import { share } from '../../connection';
+import { type OpHandler } from '../../op';
 import {
-  type BlobRecord,
   BlobStorage,
   type BlobStorageOptions,
   type ListedBlobRecord,
 } from '../../storage';
-import { type SpaceIDB } from './db';
+import type {
+  DeleteBlobOp,
+  GetBlobOp,
+  ListBlobsOp,
+  ReleaseBlobsOp,
+  SetBlobOp,
+} from '../../storage/ops';
+import { IDBConnection } from './db';
 
 export interface IndexedDBBlobStorageOptions extends BlobStorageOptions {
-  db: SpaceIDB;
+  dbName: string;
 }
 
 export class IndexedDBBlobStorage extends BlobStorage<IndexedDBBlobStorageOptions> {
+  readonly connection = share(new IDBConnection(this.options.dbName));
+
   get db() {
-    return this.options.db;
+    return this.connection.inner;
   }
 
-  protected override doConnect(): Promise<void> {
-    return Promise.resolve();
-  }
-  protected override doDisconnect(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  override async getBlob(key: string): Promise<BlobRecord | null> {
+  override get: OpHandler<GetBlobOp> = async ({ key }) => {
     const trx = this.db.transaction(['blobs', 'blobData'], 'readonly');
     const blob = await trx.objectStore('blobs').get(key);
     const data = await trx.objectStore('blobData').get(key);
@@ -35,24 +38,24 @@ export class IndexedDBBlobStorage extends BlobStorage<IndexedDBBlobStorageOption
       ...blob,
       data: data.data,
     };
-  }
+  };
 
-  override async setBlob(blob: BlobRecord): Promise<void> {
+  override set: OpHandler<SetBlobOp> = async blob => {
     const trx = this.db.transaction(['blobs', 'blobData'], 'readwrite');
     await trx.objectStore('blobs').put({
       key: blob.key,
       mime: blob.mime,
       size: blob.data.byteLength,
-      createdAt: Date.now(),
+      createdAt: new Date(),
       deletedAt: null,
     });
     await trx.objectStore('blobData').put({
       key: blob.key,
       data: blob.data,
     });
-  }
+  };
 
-  override async deleteBlob(key: string, permanently = false): Promise<void> {
+  override delete: OpHandler<DeleteBlobOp> = async ({ key, permanently }) => {
     if (permanently) {
       const trx = this.db.transaction(['blobs', 'blobData'], 'readwrite');
       await trx.objectStore('blobs').delete(key);
@@ -63,13 +66,13 @@ export class IndexedDBBlobStorage extends BlobStorage<IndexedDBBlobStorageOption
       if (blob) {
         await trx.store.put({
           ...blob,
-          deletedAt: Date.now(),
+          deletedAt: new Date(),
         });
       }
     }
-  }
+  };
 
-  override async releaseBlobs(): Promise<void> {
+  override release: OpHandler<ReleaseBlobsOp> = async () => {
     const trx = this.db.transaction(['blobs', 'blobData'], 'readwrite');
 
     const it = trx.objectStore('blobs').iterate();
@@ -80,9 +83,9 @@ export class IndexedDBBlobStorage extends BlobStorage<IndexedDBBlobStorageOption
         await trx.objectStore('blobData').delete(item.value.key);
       }
     }
-  }
+  };
 
-  override async listBlobs(): Promise<ListedBlobRecord[]> {
+  override list: OpHandler<ListBlobsOp> = async () => {
     const trx = this.db.transaction('blobs', 'readonly');
     const it = trx.store.iterate();
 
@@ -94,5 +97,5 @@ export class IndexedDBBlobStorage extends BlobStorage<IndexedDBBlobStorageOption
     }
 
     return blobs;
-  }
+  };
 }

@@ -3,10 +3,8 @@ mod doc;
 mod storage;
 mod sync;
 
-use std::path::PathBuf;
-
 use chrono::NaiveDateTime;
-use napi::bindgen_prelude::{Buffer, Uint8Array};
+use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 fn map_err(err: sqlx::Error) -> napi::Error {
@@ -17,16 +15,17 @@ fn map_err(err: sqlx::Error) -> napi::Error {
 pub struct DocUpdate {
   pub doc_id: String,
   pub created_at: NaiveDateTime,
-  pub data: Buffer,
+  pub data: Uint8Array,
 }
 
 #[napi(object)]
 pub struct DocRecord {
   pub doc_id: String,
-  pub data: Buffer,
+  pub data: Uint8Array,
   pub timestamp: NaiveDateTime,
 }
 
+#[derive(Debug)]
 #[napi(object)]
 pub struct DocClock {
   pub doc_id: String,
@@ -36,14 +35,14 @@ pub struct DocClock {
 #[napi(object)]
 pub struct SetBlob {
   pub key: String,
-  pub data: Buffer,
+  pub data: Uint8Array,
   pub mime: String,
 }
 
 #[napi(object)]
 pub struct Blob {
   pub key: String,
-  pub data: Buffer,
+  pub data: Uint8Array,
   pub mime: String,
   pub size: i64,
   pub created_at: NaiveDateTime,
@@ -73,19 +72,8 @@ impl DocStorage {
 
   #[napi]
   /// Initialize the database and run migrations.
-  /// If `migrations` folder is provided, it should be a path to a directory containing SQL migration files.
-  /// If not, it will to try read migrations under './migrations' related to where this program is running(PWD).
-  pub async fn init(&self, migrations_folder: Option<String>) -> napi::Result<()> {
-    self.storage.connect().await.map_err(map_err)?;
-    self
-      .storage
-      .migrate(
-        migrations_folder
-          .map(PathBuf::from)
-          .unwrap_or_else(|| std::env::current_dir().unwrap().join("migrations")),
-      )
-      .await
-      .map_err(map_err)
+  pub async fn connect(&self) -> napi::Result<()> {
+    self.storage.connect().await.map_err(map_err)
   }
 
   #[napi]
@@ -110,11 +98,14 @@ impl DocStorage {
   }
 
   #[napi]
-  pub async fn push_updates(&self, doc_id: String, updates: Vec<Uint8Array>) -> napi::Result<u32> {
-    let updates = updates.iter().map(|u| u.as_ref()).collect::<Vec<_>>();
+  pub async fn push_update(
+    &self,
+    doc_id: String,
+    update: Uint8Array,
+  ) -> napi::Result<NaiveDateTime> {
     self
       .storage
-      .push_updates(doc_id, updates)
+      .push_update(doc_id, update)
       .await
       .map_err(map_err)
   }
@@ -157,7 +148,7 @@ impl DocStorage {
   }
 
   #[napi]
-  pub async fn get_doc_clocks(&self, after: Option<i64>) -> napi::Result<Vec<DocClock>> {
+  pub async fn get_doc_clocks(&self, after: Option<NaiveDateTime>) -> napi::Result<Vec<DocClock>> {
     self.storage.get_doc_clocks(after).await.map_err(map_err)
   }
 
@@ -230,5 +221,10 @@ impl DocStorage {
       .set_peer_pushed_clock(peer, doc_id, clock)
       .await
       .map_err(map_err)
+  }
+
+  #[napi]
+  pub async fn clear_clocks(&self) -> napi::Result<()> {
+    self.storage.clear_clocks().await.map_err(map_err)
   }
 }
