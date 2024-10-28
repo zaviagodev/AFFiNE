@@ -1,8 +1,8 @@
-import { AttachmentViewer } from '@affine/component/attachment-viewer';
 import type { AttachmentBlockModel } from '@blocksuite/affine/blocks';
 import { type PropsWithChildren, Suspense, useMemo } from 'react';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 
+import { AttachmentViewer } from '../../../../components/attachment-viewer';
 import { useEditor } from '../utils';
 
 const ErrorLogger = (props: FallbackProps) => {

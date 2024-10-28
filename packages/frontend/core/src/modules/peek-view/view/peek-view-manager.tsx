@@ -14,6 +14,7 @@ import {
   type PeekViewModalContainerProps,
 } from './modal-container';
 import {
+  AttachmentPeekViewControls,
   DefaultPeekViewControls,
   DocPeekViewControls,
 } from './peek-view-controls';
@@ -57,7 +58,9 @@ const renderControls = ({ info }: ActivePeekView) => {
     return <DocPeekViewControls docRef={info.docRef} />;
   }
 
-  // TODO(@fundon): attachment's controls
+  if (info.type === 'attachment') {
+    return <AttachmentPeekViewControls docRef={info.docRef} />;
+  }
 
   if (info.type === 'image') {
     return null; // image controls are rendered in the image preview

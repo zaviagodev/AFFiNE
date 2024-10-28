@@ -940,6 +940,9 @@
   "com.affine.peek-view-controls.open-doc-in-new-tab": "Open in new tab",
   "com.affine.peek-view-controls.open-doc-in-split-view": "Open in split view",
   "com.affine.peek-view-controls.open-info": "Open doc info",
+  "com.affine.peek-view-controls.open-attachment": "Open this attachment",
+  "com.affine.peek-view-controls.open-attachment-in-new-tab": "Open in new tab",
+  "com.affine.peek-view-controls.open-attachment-in-split-view": "Open in split view",
   "com.affine.quicksearch.group.creation": "New",
   "com.affine.quicksearch.group.searchfor": "Search for \"{{query}}\"",
   "com.affine.resetSyncStatus.button": "Reset sync",
@@ -1346,5 +1349,7 @@
   "system": "System",
   "unnamed": "unnamed",
   "upgradeBrowser": "Please upgrade to the latest version of Chrome for the best experience.",
-  "com.affine.workspace.properties": "Workspace properties"
+  "com.affine.workspace.properties": "Workspace properties",
+  "com.affine.attachment.preview.error.title": "Unable to preview this file",
+  "com.affine.attachment.preview.error.subtitle": "file type not supported."
 }

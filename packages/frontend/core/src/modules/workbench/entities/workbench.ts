@@ -141,6 +141,14 @@ export class Workbench extends Entity {
     this.open(`/${docId}${query}`, options);
   }
 
+  openAttachment(
+    docId: string,
+    blockId: string,
+    options?: WorkbenchOpenOptions
+  ) {
+    this.open(`/${docId}/${blockId}`, options);
+  }
+
   openCollections(options?: WorkbenchOpenOptions) {
     this.open('/collection', options);
   }

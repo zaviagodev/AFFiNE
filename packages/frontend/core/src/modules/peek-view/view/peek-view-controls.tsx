@@ -154,3 +154,68 @@ export const DocPeekViewControls = ({
     </div>
   );
 };
+
+export const AttachmentPeekViewControls = ({
+  docRef,
+  className,
+  ...rest
+}: DocPeekViewControlsProps) => {
+  const peekView = useService(PeekViewService).peekView;
+  const workbench = useService(WorkbenchService).workbench;
+  const t = useI18n();
+  const controls = useMemo(() => {
+    return [
+      {
+        icon: <CloseIcon />,
+        nameKey: 'close',
+        name: t['com.affine.peek-view-controls.close'](),
+        onClick: () => peekView.close(),
+      },
+      {
+        icon: <ExpandFullIcon />,
+        name: t['com.affine.peek-view-controls.open-attachment'](),
+        nameKey: 'open',
+        onClick: () => {
+          const { docId, blockIds: [blockId] = [] } = docRef;
+          if (docId && blockId) {
+            workbench.openAttachment(docId, blockId);
+          }
+          peekView.close('none');
+        },
+      },
+      {
+        icon: <OpenInNewIcon />,
+        nameKey: 'new-tab',
+        name: t['com.affine.peek-view-controls.open-attachment-in-new-tab'](),
+        onClick: () => {
+          const { docId, blockIds: [blockId] = [] } = docRef;
+          if (docId && blockId) {
+            workbench.openAttachment(docId, blockId, { at: 'new-tab' });
+          }
+          peekView.close('none');
+        },
+      },
+      BUILD_CONFIG.isElectron && {
+        icon: <SplitViewIcon />,
+        nameKey: 'split-view',
+        name: t[
+          'com.affine.peek-view-controls.open-attachment-in-split-view'
+        ](),
+        onClick: () => {
+          const { docId, blockIds: [blockId] = [] } = docRef;
+          if (docId && blockId) {
+            workbench.openAttachment(docId, blockId, { at: 'beside' });
+          }
+          peekView.close('none');
+        },
+      },
+    ].filter((opt): opt is ControlButtonProps => Boolean(opt));
+  }, [t, peekView, workbench, docRef]);
+  return (
+    <div {...rest} className={clsx(styles.root, className)}>
+      {controls.map(option => (
+        <ControlButton key={option.nameKey} {...option} />
+      ))}
+    </div>
+  );
+};

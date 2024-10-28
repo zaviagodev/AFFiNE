@@ -1,6 +1,7 @@
+import { IconButton, Menu, MenuItem } from '@affine/component';
 import type { AttachmentBlockModel } from '@blocksuite/affine/blocks';
 import {
-  EditIcon,
+  //EditIcon,
   LocalDataIcon,
   MoreHorizontalIcon,
   ZoomDownIcon,
@@ -9,25 +10,21 @@ import {
 import clsx from 'clsx';
 import { useState } from 'react';
 
-import { IconButton } from '../../ui/button';
-import { Menu, MenuItem } from '../../ui/menu';
 import * as styles from './styles.css';
-import { saveBufferToFile } from './utils';
+import { download } from './utils';
 
 const items = [
+  /*
   {
     name: 'Rename',
     icon: <EditIcon />,
     action(_model: AttachmentBlockModel) {},
   },
+  */
   {
     name: 'Download',
     icon: <LocalDataIcon />,
-    action(model: AttachmentBlockModel) {
-      const { sourceId, name } = model;
-      if (!sourceId) return;
-      saveBufferToFile(sourceId, name).catch(console.error);
-    },
+    action: download,
   },
 ];
 
@@ -53,7 +50,7 @@ export const Titlebar = ({
   ext,
   size,
   zoom = 100,
-  isPDF = false,
+  //isPDF = false,
 }: TitlebarProps) => {
   const [openMenu, setOpenMenu] = useState(false);
 
@@ -65,7 +62,10 @@ export const Titlebar = ({
           <span>.{ext}</span>
         </div>
         <div>{size}</div>
-        <IconButton icon={<LocalDataIcon />}></IconButton>
+        <IconButton
+          icon={<LocalDataIcon />}
+          onClick={() => download(model)}
+        ></IconButton>
         <Menu
           items={<MenuItems model={model} />}
           rootOptions={{
@@ -86,7 +86,8 @@ export const Titlebar = ({
           styles.titlebarChild,
           'zoom',
           {
-            show: isPDF,
+            // show: isPDF,
+            show: false,
           },
         ])}
       >
