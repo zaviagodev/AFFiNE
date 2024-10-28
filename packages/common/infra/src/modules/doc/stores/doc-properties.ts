@@ -41,10 +41,7 @@ export class DocPropertiesStore extends Store {
   }
 
   updateDocProperties(id: string, config: Partial<DocProperties>) {
-    return this.dbService.db.docProperties.create({
-      id,
-      ...config,
-    });
+    return this.dbService.db.docProperties.update(id, config);
   }
 
   getDocPropertyInfoList() {
