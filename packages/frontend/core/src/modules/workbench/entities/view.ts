@@ -30,6 +30,8 @@ export class View extends Entity<{
 
   sidebarTabs$ = new LiveData<SidebarTab[]>([]);
 
+  scrollPositions: WeakMap<Location, number> = new WeakMap();
+
   // _activeTabId may point to a non-existent tab.
   // In this case, we still retain the activeTabId data and wait for the non-existent tab to be mounted.
   _activeSidebarTabId$ = new LiveData<string | null>(null);
@@ -159,6 +161,14 @@ export class View extends Entity<{
 
   activeSidebarTab(id: string | null) {
     this._activeSidebarTabId$.next(id);
+  }
+
+  getScrollPosition(location: Location): number {
+    return this.scrollPositions.get(location) ?? 0;
+  }
+
+  setScrollPosition(position: number) {
+    this.scrollPositions.set(this.history.location, position);
   }
 
   setTitle(title: string) {
