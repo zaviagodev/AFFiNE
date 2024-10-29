@@ -47,14 +47,13 @@ import { ExplorerTreeNode } from '../../tree/node';
 import { ExplorerCollectionNode } from '../collection';
 import { ExplorerDocNode } from '../doc';
 import { ExplorerTagNode } from '../tag';
+import { FolderCreateTip, FolderRenameSubMenu } from './dialog';
 import { FavoriteFolderOperation } from './operations';
 
 export const ExplorerFolderNode = ({
   nodeId,
-  defaultRenaming,
   operations,
 }: {
-  defaultRenaming?: boolean;
   nodeId: string;
   operations?:
     | NodeOperation[]
@@ -83,11 +82,7 @@ export const ExplorerFolderNode = ({
 
   if (type === 'folder') {
     return (
-      <ExplorerFolderNodeFolder
-        node={node}
-        defaultRenaming={defaultRenaming}
-        operations={additionalOperations}
-      />
+      <ExplorerFolderNodeFolder node={node} operations={additionalOperations} />
     );
   }
   if (!data) return null;
@@ -123,10 +118,8 @@ const ExplorerFolderIcon: ExplorerTreeNodeIcon = ({
 
 const ExplorerFolderNodeFolder = ({
   node,
-  defaultRenaming,
   operations: additionalOperations,
 }: {
-  defaultRenaming?: boolean;
   node: FolderNode;
   operations?: NodeOperation[];
 }) => {
@@ -144,7 +137,6 @@ const ExplorerFolderNodeFolder = ({
     featureFlagService.flags.enable_emoji_folder_icon.$
   );
   const [collapsed, setCollapsed] = useState(true);
-  const [newFolderId, setNewFolderId] = useState<string | null>(null);
 
   const { createPage } = usePageHelper(
     workspaceService.workspace.docCollection
@@ -182,15 +174,14 @@ const ExplorerFolderNodeFolder = ({
     setCollapsed(false);
   }, [createPage, node]);
 
-  const handleCreateSubfolder = useCallback(() => {
-    const newFolderId = node.createFolder(
-      t['com.affine.rootAppSidebar.organize.new-folders'](),
-      node.indexAt('before')
-    );
-    track.$.navigationPanel.organize.createOrganizeItem({ type: 'folder' });
-    setCollapsed(false);
-    setNewFolderId(newFolderId);
-  }, [node, t]);
+  const handleCreateSubfolder = useCallback(
+    (name: string) => {
+      node.createFolder(name, node.indexAt('before'));
+      track.$.navigationPanel.organize.createOrganizeItem({ type: 'folder' });
+      setCollapsed(false);
+    },
+    [node]
+  );
 
   const handleAddToFolder = useCallback(
     (type: 'doc' | 'collection' | 'tag') => {
@@ -237,6 +228,13 @@ const ExplorerFolderNodeFolder = ({
     ]
   );
 
+  const createSubTipRenderer = useCallback(
+    ({ input }: { input: string }) => {
+      return <FolderCreateTip input={input} parentName={name} />;
+    },
+    [name]
+  );
+
   const folderOperations = useMemo(() => {
     return [
       {
@@ -255,11 +253,38 @@ const ExplorerFolderNodeFolder = ({
         ),
       },
       {
+        index: 98,
+        view: (
+          <FolderRenameSubMenu
+            initialName={name}
+            onConfirm={handleRename}
+            menuProps={{
+              triggerOptions: { 'data-testid': 'rename-folder' },
+            }}
+          />
+        ),
+      },
+      {
+        index: 99,
+        view: <MenuSeparator />,
+      },
+      {
         index: 100,
         view: (
-          <MenuItem prefixIcon={<FolderIcon />} onClick={handleCreateSubfolder}>
-            {t['com.affine.rootAppSidebar.organize.folder.create-subfolder']()}
-          </MenuItem>
+          <FolderRenameSubMenu
+            text={t[
+              'com.affine.rootAppSidebar.organize.folder.create-subfolder'
+            ]()}
+            title={t[
+              'com.affine.rootAppSidebar.organize.folder.create-subfolder'
+            ]()}
+            onConfirm={handleCreateSubfolder}
+            descRenderer={createSubTipRenderer}
+            icon={<FolderIcon />}
+            menuProps={{
+              triggerOptions: { 'data-testid': 'create-subfolder' },
+            }}
+          />
         ),
       },
       {
@@ -327,11 +352,14 @@ const ExplorerFolderNodeFolder = ({
       },
     ];
   }, [
+    createSubTipRenderer,
     handleAddToFolder,
     handleCreateSubfolder,
     handleDelete,
     handleNewDoc,
-    node,
+    handleRename,
+    name,
+    node.id,
     t,
   ]);
 
@@ -370,7 +398,6 @@ const ExplorerFolderNodeFolder = ({
 
   const handleCollapsedChange = useCallback((collapsed: boolean) => {
     if (collapsed) {
-      setNewFolderId(null); // reset new folder id to clear the renaming state
       setCollapsed(true);
     } else {
       setCollapsed(false);
@@ -381,26 +408,25 @@ const ExplorerFolderNodeFolder = ({
     <ExplorerTreeNode
       icon={ExplorerFolderIcon}
       name={name}
-      defaultRenaming={defaultRenaming}
-      renameable
       extractEmojiAsIcon={enableEmojiIcon}
       collapsed={collapsed}
       setCollapsed={handleCollapsedChange}
-      onRename={handleRename}
       operations={finalOperations}
       data-testid={`explorer-folder-${node.id}`}
+      aria-label={name}
+      data-role="explorer-folder"
     >
       {children.map(child => (
         <ExplorerFolderNode
           key={child.id}
           nodeId={child.id as string}
-          defaultRenaming={child.id === newFolderId}
           operations={childrenOperations}
         />
       ))}
       <AddItemPlaceholder
         label={t['com.affine.rootAppSidebar.organize.folder.add-docs']()}
         onClick={() => handleAddToFolder('doc')}
+        data-testid="new-folder-in-folder-button"
       />
     </ExplorerTreeNode>
   );

@@ -33,6 +33,8 @@ import {
 } from '@toeverything/infra';
 import { useCallback, useMemo } from 'react';
 
+import { DocRenameSubMenu } from './dialog';
+
 export const useExplorerDocNodeOperations = (
   docId: string,
   options: {
@@ -135,6 +137,14 @@ export const useExplorerDocNodeOperations = (
     });
   }, [docId, compatibleFavoriteItemsAdapter]);
 
+  const handleRename = useAsyncCallback(
+    async (newName: string) => {
+      await docsService.changeDocTitle(docId, newName);
+      track.$.navigationPanel.organize.renameOrganizeItem({ type: 'doc' });
+    },
+    [docId, docsService]
+  );
+
   return useMemo(
     () => ({
       favorite,
@@ -145,6 +155,7 @@ export const useExplorerDocNodeOperations = (
       handleOpenInNewTab,
       handleMoveToTrash,
       handleOpenInfoModal,
+      handleRename,
     }),
     [
       favorite,
@@ -154,6 +165,7 @@ export const useExplorerDocNodeOperations = (
       handleOpenInNewTab,
       handleOpenInSplitView,
       handleOpenInfoModal,
+      handleRename,
       handleToggleFavoriteDoc,
     ]
   );
@@ -177,8 +189,12 @@ export const useExplorerDocNodeOperationsMenu = (
     handleOpenInNewTab,
     handleMoveToTrash,
     handleOpenInfoModal,
+    handleRename,
   } = useExplorerDocNodeOperations(docId, options);
 
+  const docService = useService(DocsService);
+  const docRecord = useLiveData(docService.list.doc$(docId));
+  const title = useLiveData(docRecord?.title$);
   const enableMultiView = useLiveData(
     featureFlagService.flags.enable_multi_view.$
   );
@@ -196,6 +212,14 @@ export const useExplorerDocNodeOperationsMenu = (
             onClick={handleAddLinkedPage}
           />
         ),
+      },
+      {
+        index: 10,
+        view: <DocRenameSubMenu onConfirm={handleRename} initialName={title} />,
+      },
+      {
+        index: 11,
+        view: <MenuSeparator />,
       },
       {
         index: 50,
@@ -289,8 +313,10 @@ export const useExplorerDocNodeOperationsMenu = (
       handleOpenInNewTab,
       handleOpenInSplitView,
       handleOpenInfoModal,
+      handleRename,
       handleToggleFavoriteDoc,
       t,
+      title,
     ]
   );
 };

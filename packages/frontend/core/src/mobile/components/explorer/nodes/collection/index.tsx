@@ -52,23 +52,6 @@ export const ExplorerCollectionNode = ({
 
   const collection = useLiveData(collectionService.collection$(collectionId));
 
-  const handleRename = useCallback(
-    (name: string) => {
-      if (collection && collection.name !== name) {
-        collectionService.updateCollection(collectionId, () => ({
-          ...collection,
-          name,
-        }));
-
-        track.$.navigationPanel.organize.renameOrganizeItem({
-          type: 'collection',
-        });
-        notify.success({ message: t['com.affine.toastMessage.rename']() });
-      }
-    },
-    [collection, collectionId, collectionService, t]
-  );
-
   const handleOpenCollapsed = useCallback(() => {
     setCollapsed(false);
   }, []);
@@ -105,7 +88,7 @@ export const ExplorerCollectionNode = ({
       return [...additionalOperations, ...collectionOperations];
     }
     return collectionOperations;
-  }, [collectionOperations, additionalOperations]);
+  }, [additionalOperations, collectionOperations]);
 
   if (!collection) {
     return null;
@@ -115,12 +98,10 @@ export const ExplorerCollectionNode = ({
     <ExplorerTreeNode
       icon={CollectionIcon}
       name={collection.name || t['Untitled']()}
-      renameable
       collapsed={collapsed}
       setCollapsed={setCollapsed}
       to={`/collection/${collection.id}`}
       active={active}
-      onRename={handleRename}
       operations={finalOperations}
       data-testid={`explorer-collection-${collectionId}`}
     >

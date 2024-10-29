@@ -8,6 +8,11 @@ import {
 import type { MenuSubProps } from '../menu.types';
 
 export type SubMenuContent = {
+  /**
+   * Customize submenu's title
+   * @default "Back"
+   */
+  title?: string;
   items: ReactNode;
   contentOptions?: MenuSubProps['subContentOptions'];
 };

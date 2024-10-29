@@ -1,17 +1,10 @@
-import { MenuItem, MobileMenu } from '@affine/component';
-import { RenameModal } from '@affine/component/rename-modal';
-import { AppSidebarService } from '@affine/core/modules/app-sidebar';
-import type {
-  BaseExplorerTreeNodeProps,
-  NodeOperation,
-} from '@affine/core/modules/explorer';
+import { MobileMenu } from '@affine/component';
+import type { BaseExplorerTreeNodeProps } from '@affine/core/modules/explorer';
 import { ExplorerTreeContext } from '@affine/core/modules/explorer';
 import { WorkbenchLink } from '@affine/core/modules/workbench';
 import { extractEmojiIcon } from '@affine/core/utils';
-import { useI18n } from '@affine/i18n';
-import { ArrowDownSmallIcon, EditIcon } from '@blocksuite/icons/rc';
+import { ArrowDownSmallIcon } from '@blocksuite/icons/rc';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { useLiveData, useService } from '@toeverything/infra';
 import { assignInlineVars } from '@vanilla-extract/dynamic';
 import {
   Fragment,
@@ -33,9 +26,6 @@ export const ExplorerTreeNode = ({
   onClick,
   to,
   active,
-  defaultRenaming,
-  renameable,
-  onRename,
   disabled,
   collapsed,
   extractEmojiAsIcon,
@@ -47,17 +37,12 @@ export const ExplorerTreeNode = ({
   linkComponent: LinkComponent = WorkbenchLink,
   ...otherProps
 }: ExplorerTreeNodeProps) => {
-  const t = useI18n();
   const context = useContext(ExplorerTreeContext);
   const level = context?.level ?? 0;
   // If no onClick or to is provided, clicking on the node will toggle the collapse state
   const clickForCollapse = !onClick && !to && !disabled;
   const [childCount, setChildCount] = useState(0);
-  const [renaming, setRenaming] = useState(defaultRenaming);
   const rootRef = useRef<HTMLDivElement>(null);
-
-  const appSidebarService = useService(AppSidebarService).sidebar;
-  const sidebarWidth = useLiveData(appSidebarService.width$);
 
   const { emoji, name } = useMemo(() => {
     if (!extractEmojiAsIcon || !rawName) {
@@ -73,39 +58,13 @@ export const ExplorerTreeNode = ({
     };
   }, [extractEmojiAsIcon, rawName]);
 
-  const presetOperations = useMemo(
-    () =>
-      (
-        [
-          renameable
-            ? {
-                index: 0,
-                view: (
-                  <MenuItem
-                    key={'explorer-tree-rename'}
-                    type={'default'}
-                    prefixIcon={<EditIcon />}
-                    onClick={() => setRenaming(true)}
-                  >
-                    {t['com.affine.menu.rename']()}
-                  </MenuItem>
-                ),
-              }
-            : null,
-        ] as (NodeOperation | null)[]
-      ).filter((t): t is NodeOperation => t !== null),
-    [renameable, t]
-  );
-
   const { menuOperations } = useMemo(() => {
-    const sorted = [...presetOperations, ...operations].sort(
-      (a, b) => a.index - b.index
-    );
+    const sorted = [...operations].sort((a, b) => a.index - b.index);
     return {
       menuOperations: sorted.filter(({ inline }) => !inline),
       inlineOperations: sorted.filter(({ inline }) => !!inline),
     };
-  }, [presetOperations, operations]);
+  }, [operations]);
 
   const contextValue = useMemo(() => {
     return {
@@ -125,11 +84,6 @@ export const ExplorerTreeNode = ({
       setCollapsed(!collapsed);
     },
     [collapsed, setCollapsed]
-  );
-
-  const handleRename = useCallback(
-    (newName: string) => onRename?.(newName),
-    [onRename]
   );
 
   const handleClick = useCallback(
@@ -166,7 +120,7 @@ export const ExplorerTreeNode = ({
                 <Fragment key={index}>{view}</Fragment>
               ))}
             >
-              <div className={styles.iconContainer}>
+              <div className={styles.iconContainer} data-testid="menu-trigger">
                 {emoji ?? (Icon && <Icon collapsed={collapsed} />)}
               </div>
             </MobileMenu>
@@ -193,18 +147,6 @@ export const ExplorerTreeNode = ({
           data-collapsed={collapsed !== false}
         />
       </div>
-
-      {renameable && (
-        <RenameModal
-          open={!!renaming}
-          width={sidebarWidth - 32}
-          onOpenChange={setRenaming}
-          onRename={handleRename}
-          currentName={rawName ?? ''}
-        >
-          <div className={styles.itemRenameAnchor} />
-        </RenameModal>
-      )}
     </div>
   );
 

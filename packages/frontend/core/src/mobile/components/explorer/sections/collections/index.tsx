@@ -1,4 +1,3 @@
-import { useEditCollectionName } from '@affine/core/components/page-list';
 import { createEmptyCollection } from '@affine/core/components/page-list/use-collection-manager';
 import { CollectionService } from '@affine/core/modules/collection';
 import { ExplorerService } from '@affine/core/modules/explorer';
@@ -8,11 +7,12 @@ import { useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
 import { useLiveData, useServices } from '@toeverything/infra';
 import { nanoid } from 'nanoid';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { AddItemPlaceholder } from '../../layouts/add-item-placeholder';
 import { CollapsibleSection } from '../../layouts/collapsible-section';
 import { ExplorerCollectionNode } from '../../nodes/collection';
+import { CollectionRenameDialog } from '../../nodes/collection/dialog';
 
 export const ExplorerCollections = () => {
   const t = useI18n();
@@ -23,31 +23,22 @@ export const ExplorerCollections = () => {
   });
   const explorerSection = explorerService.sections.collections;
   const collections = useLiveData(collectionService.collections$);
-  const { open: openCreateCollectionModel } = useEditCollectionName({
-    title: t['com.affine.editCollection.createCollection'](),
-    showTips: true,
-  });
+  const [showCreateCollectionModal, setShowCreateCollectionModal] =
+    useState(false);
 
-  const handleCreateCollection = useCallback(() => {
-    openCreateCollectionModel('')
-      .then(name => {
-        const id = nanoid();
-        collectionService.addCollection(createEmptyCollection(id, { name }));
-        track.$.navigationPanel.organize.createOrganizeItem({
-          type: 'collection',
-        });
-        workbenchService.workbench.openCollection(id);
-        explorerSection.setCollapsed(false);
-      })
-      .catch(err => {
-        console.error(err);
+  const handleCreateCollection = useCallback(
+    (name: string) => {
+      setShowCreateCollectionModal(false);
+      const id = nanoid();
+      collectionService.addCollection(createEmptyCollection(id, { name }));
+      track.$.navigationPanel.organize.createOrganizeItem({
+        type: 'collection',
       });
-  }, [
-    collectionService,
-    explorerSection,
-    openCreateCollectionModel,
-    workbenchService.workbench,
-  ]);
+      workbenchService.workbench.openCollection(id);
+      explorerSection.setCollapsed(false);
+    },
+    [collectionService, explorerSection, workbenchService.workbench]
+  );
 
   return (
     <CollapsibleSection
@@ -65,7 +56,13 @@ export const ExplorerCollections = () => {
         <AddItemPlaceholder
           data-testid="explorer-bar-add-collection-button"
           label={t['com.affine.rootAppSidebar.collection.new']()}
-          onClick={handleCreateCollection}
+          onClick={() => setShowCreateCollectionModal(true)}
+        />
+        <CollectionRenameDialog
+          title={t['com.affine.m.explorer.collection.new-dialog-title']()}
+          open={showCreateCollectionModal}
+          onOpenChange={setShowCreateCollectionModal}
+          onConfirm={handleCreateCollection}
         />
       </ExplorerTreeRoot>
     </CollapsibleSection>

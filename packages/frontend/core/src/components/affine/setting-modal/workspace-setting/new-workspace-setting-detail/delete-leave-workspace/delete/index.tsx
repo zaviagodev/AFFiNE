@@ -40,7 +40,7 @@ export const WorkspaceDeleteModal = ({
       confirmButtonOptions={{
         variant: 'error',
         disabled: !allowDelete,
-        ['data-testid' as string]: 'delete-workspace-confirm-button',
+        'data-testid': 'delete-workspace-confirm-button',
       }}
       {...props}
     >

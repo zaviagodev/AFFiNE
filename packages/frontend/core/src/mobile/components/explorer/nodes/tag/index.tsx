@@ -2,7 +2,6 @@ import type { NodeOperation } from '@affine/core/modules/explorer';
 import type { Tag } from '@affine/core/modules/tag';
 import { TagService } from '@affine/core/modules/tag';
 import { useI18n } from '@affine/i18n';
-import track from '@affine/track';
 import {
   GlobalContextService,
   useLiveData,
@@ -23,10 +22,8 @@ import * as styles from './styles.css';
 export const ExplorerTagNode = ({
   tagId,
   operations: additionalOperations,
-  defaultRenaming,
 }: {
   tagId: string;
-  defaultRenaming?: boolean;
   operations?: NodeOperation[];
 }) => {
   const t = useI18n();
@@ -47,6 +44,7 @@ export const ExplorerTagNode = ({
       return (
         <div className={clsx(styles.tagIconContainer, className)}>
           <div
+            data-testid="explorer-tag-icon-dot"
             className={styles.tagIcon}
             style={{
               backgroundColor: tagColor,
@@ -56,18 +54,6 @@ export const ExplorerTagNode = ({
       );
     },
     [tagColor]
-  );
-
-  const handleRename = useCallback(
-    (newName: string) => {
-      if (tagRecord && tagRecord.value$.value !== newName) {
-        tagRecord.rename(newName);
-        track.$.navigationPanel.organize.renameOrganizeItem({
-          type: 'tag',
-        });
-      }
-    },
-    [tagRecord]
   );
 
   const option = useMemo(
@@ -94,15 +80,14 @@ export const ExplorerTagNode = ({
     <ExplorerTreeNode
       icon={Icon}
       name={tagName || t['Untitled']()}
-      renameable
       collapsed={collapsed}
       setCollapsed={setCollapsed}
       to={`/tag/${tagId}`}
       active={active}
-      defaultRenaming={defaultRenaming}
-      onRename={handleRename}
       operations={finalOperations}
       data-testid={`explorer-tag-${tagId}`}
+      aria-label={tagName}
+      data-role="explorer-tag"
     >
       <ExplorerTagNodeDocs tag={tagRecord} onNewDoc={handleNewDoc} />
     </ExplorerTreeNode>

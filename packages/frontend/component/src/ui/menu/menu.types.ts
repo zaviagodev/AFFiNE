@@ -36,7 +36,9 @@ export interface MenuItemProps
 export interface MenuSubProps {
   children: ReactNode;
   items: ReactNode;
-  triggerOptions?: Omit<MenuItemProps, 'onSelect' | 'children' | 'suffixIcon'>;
+  triggerOptions?: Omit<MenuItemProps, 'onSelect' | 'children'> & {
+    [key: `data-${string}`]: string;
+  };
   portalOptions?: Omit<DropdownMenuPortalProps, 'children'>;
   subOptions?: Omit<DropdownMenuSubProps, 'children'>;
   subContentOptions?: Omit<DropdownMenuSubContentProps, 'children'>;

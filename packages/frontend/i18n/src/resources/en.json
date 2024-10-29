@@ -1351,5 +1351,22 @@
   "system": "System",
   "unnamed": "unnamed",
   "upgradeBrowser": "Please upgrade to the latest version of Chrome for the best experience.",
-  "com.affine.workspace.properties": "Workspace properties"
+  "com.affine.workspace.properties": "Workspace properties",
+  "com.affine.m.rename-to": "Rename to \"{{name}}\"",
+  "com.affine.m.explorer.folder.rename": "Rename",
+  "com.affine.m.explorer.folder.new-dialog-title": "Create Folder",
+  "com.affine.m.explorer.folder.root": "Organize",
+  "com.affine.m.explorer.folder.new-tip-empty": "Create a folder in the {{parent}}.",
+  "com.affine.m.explorer.folder.new-tip-not-empty": "Create \"{{value}}\" in the {{parent}}.",
+  "com.affine.m.explorer.folder.rename-confirm": "Done",
+  "com.affine.m.explorer.tag.rename": "Rename",
+  "com.affine.m.explorer.tag.rename-menu-title": "Rename Tag",
+  "com.affine.m.explorer.tag.new-dialog-title": "Create Tag",
+  "com.affine.m.explorer.tag.rename-confirm": "Done",
+  "com.affine.m.explorer.tag.new-tip-empty": "Create a tag in this workspace.",
+  "com.affine.m.explorer.tag.new-tip-not-empty": "Create \"{{value}}\" tag in this workspace.",
+  "com.affine.m.explorer.collection.rename": "Rename",
+  "com.affine.m.explorer.collection.rename-menu-title": "Rename Collection",
+  "com.affine.m.explorer.collection.new-dialog-title": "Create Collection",
+  "com.affine.m.explorer.doc.rename": "Rename"
 }

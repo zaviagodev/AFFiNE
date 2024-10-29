@@ -134,9 +134,9 @@ export const MobileMenu = ({
                   className={styles.backButton}
                   prefix={<ArrowLeftSmallIcon />}
                   onClick={() => setSubMenus(prev => prev.slice(0, index))}
-                  prefixStyle={{ width: 20, height: 20 }}
+                  prefixStyle={{ width: 24, height: 24 }}
                 >
-                  {t['com.affine.backButton']()}
+                  {sub.title || t['com.affine.backButton']()}
                 </Button>
 
                 {sub.items}

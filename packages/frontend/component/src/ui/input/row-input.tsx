@@ -20,6 +20,7 @@ export type RowInputProps = {
   type?: HTMLInputElement['type'];
   style?: CSSProperties;
   onEnter?: () => void;
+  [key: `data-${string}`]: string;
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'size' | 'onBlur'>;
 
 // RowInput component that is used in the selector layout for search input

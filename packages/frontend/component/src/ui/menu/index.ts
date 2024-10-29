@@ -30,3 +30,4 @@ export {
 };
 
 export { Menu, MenuItem, MenuSeparator, MenuSub, MenuTrigger };
+export * from './mobile/hook';

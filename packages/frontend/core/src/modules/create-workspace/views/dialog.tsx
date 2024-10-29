@@ -95,7 +95,7 @@ const NameWorkspaceContent = ({
         variant: 'primary',
         loading,
         disabled: !workspaceName,
-        ['data-testid' as string]: 'create-workspace-create-button',
+        'data-testid': 'create-workspace-create-button',
       }}
       closeButtonOptions={{
         ['data-testid' as string]: 'create-workspace-close-button',

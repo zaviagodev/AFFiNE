@@ -1,15 +1,23 @@
 import { ExplorerService } from '@affine/core/modules/explorer';
 import { ExplorerTreeRoot } from '@affine/core/modules/explorer/views/tree';
-import type { Tag } from '@affine/core/modules/tag';
 import { TagService } from '@affine/core/modules/tag';
 import { useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
 import { useLiveData, useServices } from '@toeverything/infra';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { AddItemPlaceholder } from '../../layouts/add-item-placeholder';
 import { CollapsibleSection } from '../../layouts/collapsible-section';
 import { ExplorerTagNode } from '../../nodes/tag';
+import { TagRenameDialog } from '../../nodes/tag/dialog';
+
+export const TagDesc = ({ input }: { input: string }) => {
+  const t = useI18n();
+
+  return input
+    ? t['com.affine.m.explorer.tag.new-tip-not-empty']({ value: input })
+    : t['com.affine.m.explorer.tag.new-tip-empty']();
+};
 
 export const ExplorerTags = () => {
   const { tagService, explorerService } = useServices({
@@ -17,25 +25,20 @@ export const ExplorerTags = () => {
     ExplorerService,
   });
   const explorerSection = explorerService.sections.tags;
-  const collapsed = useLiveData(explorerSection.collapsed$);
-  const [createdTag, setCreatedTag] = useState<Tag | null>(null);
   const tags = useLiveData(tagService.tagList.tags$);
+  const [showNewTagDialog, setShowNewTagDialog] = useState(false);
 
   const t = useI18n();
 
-  const handleCreateNewFavoriteDoc = useCallback(() => {
-    const newTags = tagService.tagList.createTag(
-      t['com.affine.rootAppSidebar.tags.new-tag'](),
-      tagService.randomTagColor()
-    );
-    setCreatedTag(newTags);
-    track.$.navigationPanel.organize.createOrganizeItem({ type: 'tag' });
-    explorerSection.setCollapsed(false);
-  }, [explorerSection, t, tagService]);
-
-  useEffect(() => {
-    if (collapsed) setCreatedTag(null); // reset created tag to clear the renaming state
-  }, [collapsed]);
+  const handleNewTag = useCallback(
+    (name: string, color: string) => {
+      setShowNewTagDialog(false);
+      tagService.tagList.createTag(name, color);
+      track.$.navigationPanel.organize.createOrganizeItem({ type: 'tag' });
+      explorerSection.setCollapsed(false);
+    },
+    [explorerSection, tagService]
+  );
 
   return (
     <CollapsibleSection
@@ -44,18 +47,21 @@ export const ExplorerTags = () => {
     >
       <ExplorerTreeRoot>
         {tags.map(tag => (
-          <ExplorerTagNode
-            key={tag.id}
-            tagId={tag.id}
-            defaultRenaming={createdTag?.id === tag.id}
-          />
+          <ExplorerTagNode key={tag.id} tagId={tag.id} />
         ))}
         <AddItemPlaceholder
-          data-testid="explorer-bar-add-favorite-button"
-          onClick={handleCreateNewFavoriteDoc}
+          data-testid="explorer-add-tag-button"
+          onClick={() => setShowNewTagDialog(true)}
           label={t[
             'com.affine.rootAppSidebar.explorer.tag-section-add-tooltip'
           ]()}
+        />
+        <TagRenameDialog
+          open={showNewTagDialog}
+          onOpenChange={setShowNewTagDialog}
+          onConfirm={handleNewTag}
+          enableAnimation
+          descRenderer={TagDesc}
         />
       </ExplorerTreeRoot>
     </CollapsibleSection>

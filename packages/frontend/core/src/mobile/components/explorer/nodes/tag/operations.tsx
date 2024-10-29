@@ -7,12 +7,7 @@ import { TagService } from '@affine/core/modules/tag';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
-import {
-  DeleteIcon,
-  OpenInNewIcon,
-  PlusIcon,
-  SplitViewIcon,
-} from '@blocksuite/icons/rc';
+import { DeleteIcon, PlusIcon, SplitViewIcon } from '@blocksuite/icons/rc';
 import {
   DocsService,
   FeatureFlagService,
@@ -22,6 +17,8 @@ import {
   WorkspaceService,
 } from '@toeverything/infra';
 import { useCallback, useMemo } from 'react';
+
+import { TagRenameSubMenu } from './dialog';
 
 export const useExplorerTagNodeOperations = (
   tagId: string,
@@ -86,6 +83,37 @@ export const useExplorerTagNodeOperations = (
     track.$.navigationPanel.organize.openInNewTab({ type: 'tag' });
   }, [tagId, workbenchService]);
 
+  const handleRename = useCallback(
+    (newName: string) => {
+      if (tagRecord && tagRecord.value$.value !== newName) {
+        tagRecord.rename(newName);
+        track.$.navigationPanel.organize.renameOrganizeItem({
+          type: 'tag',
+        });
+      }
+    },
+    [tagRecord]
+  );
+  const handleChangeColor = useCallback(
+    (color: string) => {
+      if (tagRecord && tagRecord.color$.value !== color) {
+        tagRecord.changeColor(color);
+      }
+    },
+    [tagRecord]
+  );
+  const handleChangeNameOrColor = useCallback(
+    (name?: string, color?: string) => {
+      if (name !== undefined) {
+        handleRename(name);
+      }
+      if (color !== undefined) {
+        handleChangeColor(color);
+      }
+    },
+    [handleChangeColor, handleRename]
+  );
+
   return useMemo(
     () => ({
       favorite,
@@ -94,13 +122,19 @@ export const useExplorerTagNodeOperations = (
       handleOpenInSplitView,
       handleToggleFavoriteTag,
       handleOpenInNewTab,
+      handleRename,
+      handleChangeColor,
+      handleChangeNameOrColor,
     }),
     [
       favorite,
+      handleChangeColor,
+      handleChangeNameOrColor,
       handleMoveToTrash,
       handleNewDoc,
       handleOpenInNewTab,
       handleOpenInSplitView,
+      handleRename,
       handleToggleFavoriteTag,
     ]
   );
@@ -122,7 +156,7 @@ export const useExplorerTagNodeOperationsMenu = (
     handleMoveToTrash,
     handleOpenInSplitView,
     handleToggleFavoriteTag,
-    handleOpenInNewTab,
+    handleChangeNameOrColor,
   } = useExplorerTagNodeOperations(tagId, option);
 
   return useMemo(
@@ -131,21 +165,19 @@ export const useExplorerTagNodeOperationsMenu = (
         index: 0,
         inline: true,
         view: (
-          <IconButton
-            size="16"
-            onClick={handleNewDoc}
-            tooltip={t['com.affine.rootAppSidebar.explorer.tag-add-tooltip']()}
-          >
+          <IconButton size="16" onClick={handleNewDoc}>
             <PlusIcon />
           </IconButton>
         ),
       },
       {
-        index: 50,
+        index: 10,
         view: (
-          <MenuItem prefixIcon={<OpenInNewIcon />} onClick={handleOpenInNewTab}>
-            {t['com.affine.workbench.tab.page-menu-open']()}
-          </MenuItem>
+          <TagRenameSubMenu
+            onConfirm={handleChangeNameOrColor}
+            tagId={tagId}
+            menuProps={{ triggerOptions: { 'data-testid': 'rename-tag' } }}
+          />
         ),
       },
       ...(BUILD_CONFIG.isElectron && enableMultiView
@@ -196,12 +228,13 @@ export const useExplorerTagNodeOperationsMenu = (
     [
       enableMultiView,
       favorite,
+      handleChangeNameOrColor,
       handleMoveToTrash,
       handleNewDoc,
-      handleOpenInNewTab,
       handleOpenInSplitView,
       handleToggleFavoriteTag,
       t,
+      tagId,
     ]
   );
 };

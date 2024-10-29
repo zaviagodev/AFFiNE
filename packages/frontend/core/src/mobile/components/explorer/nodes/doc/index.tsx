@@ -1,11 +1,9 @@
 import { Loading } from '@affine/component';
-import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import { DocDisplayMetaService } from '@affine/core/modules/doc-display-meta';
 import { DocInfoService } from '@affine/core/modules/doc-info';
 import { DocsSearchService } from '@affine/core/modules/docs-search';
 import type { NodeOperation } from '@affine/core/modules/explorer';
 import { useI18n } from '@affine/i18n';
-import track from '@affine/track';
 import {
   DocsService,
   FeatureFlagService,
@@ -92,14 +90,6 @@ export const ExplorerDocNode = ({
     );
   }, [indexerLoading]);
 
-  const handleRename = useAsyncCallback(
-    async (newName: string) => {
-      await docsService.changeDocTitle(docId, newName);
-      track.$.navigationPanel.organize.renameOrganizeItem({ type: 'doc' });
-    },
-    [docId, docsService]
-  );
-
   const docInfoModal = useService(DocInfoService).modal;
   const option = useMemo(
     () => ({
@@ -126,7 +116,6 @@ export const ExplorerDocNode = ({
     <ExplorerTreeNode
       icon={Icon}
       name={t.t(docTitle)}
-      renameable
       extractEmojiAsIcon={enableEmojiIcon}
       collapsed={collapsed}
       setCollapsed={setCollapsed}
@@ -140,7 +129,6 @@ export const ExplorerDocNode = ({
           </div>
         )
       }
-      onRename={handleRename}
       operations={finalOperations}
       data-testid={`explorer-doc-${docId}`}
     >

@@ -70,6 +70,7 @@ export interface ButtonProps
   tooltip?: TooltipProps['content'];
   tooltipShortcut?: TooltipProps['shortcut'];
   tooltipOptions?: Partial<Omit<TooltipProps, 'content' | 'shortcut'>>;
+  [key: `data-${string}`]: string;
 }
 
 const IconSlot = ({

@@ -127,7 +127,7 @@ export const Export = ({ exportHandler, className, pageMode }: ExportProps) => {
       triggerOptions={{
         className: transitionStyle,
         prefixIcon: <ExportIcon />,
-        ['data-testid' as string]: 'export-menu',
+        'data-testid': 'export-menu',
       }}
       subOptions={{
         onOpenChange: handleExportMenuOpenChange,

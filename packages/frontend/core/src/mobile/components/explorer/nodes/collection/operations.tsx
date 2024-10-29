@@ -2,6 +2,7 @@ import {
   IconButton,
   MenuItem,
   MenuSeparator,
+  notify,
   useConfirmModal,
 } from '@affine/component';
 import { usePageHelper } from '@affine/core/components/blocksuite/block-suite-page-list/utils';
@@ -27,6 +28,8 @@ import {
   WorkspaceService,
 } from '@toeverything/infra';
 import { useCallback, useMemo } from 'react';
+
+import { CollectionRenameSubMenu } from './dialog';
 
 export const useExplorerCollectionNodeOperations = (
   collectionId: string,
@@ -113,6 +116,24 @@ export const useExplorerCollectionNodeOperations = (
     onOpenEdit();
   }, [onOpenEdit]);
 
+  const handleRename = useCallback(
+    (name: string) => {
+      const collection = collectionService.collection$(collectionId).value;
+      if (collection && collection.name !== name) {
+        collectionService.updateCollection(collectionId, () => ({
+          ...collection,
+          name,
+        }));
+
+        track.$.navigationPanel.organize.renameOrganizeItem({
+          type: 'collection',
+        });
+        notify.success({ message: t['com.affine.toastMessage.rename']() });
+      }
+    },
+    [collectionId, collectionService, t]
+  );
+
   return useMemo(
     () => ({
       favorite,
@@ -122,6 +143,7 @@ export const useExplorerCollectionNodeOperations = (
       handleOpenInSplitView,
       handleShowEdit,
       handleToggleFavoriteCollection,
+      handleRename,
     }),
     [
       favorite,
@@ -129,6 +151,7 @@ export const useExplorerCollectionNodeOperations = (
       handleDeleteCollection,
       handleOpenInNewTab,
       handleOpenInSplitView,
+      handleRename,
       handleShowEdit,
       handleToggleFavoriteCollection,
     ]
@@ -154,6 +177,7 @@ export const useExplorerCollectionNodeOperationsMenu = (
     handleOpenInSplitView,
     handleShowEdit,
     handleToggleFavoriteCollection,
+    handleRename,
   } = useExplorerCollectionNodeOperations(
     collectionId,
     onOpenCollapsed,
@@ -176,6 +200,14 @@ export const useExplorerCollectionNodeOperationsMenu = (
             <PlusIcon />
           </IconButton>
         ),
+      },
+      {
+        index: 10,
+        view: <CollectionRenameSubMenu onConfirm={handleRename} />,
+      },
+      {
+        index: 11,
+        view: <MenuSeparator />,
       },
       {
         index: 99,
@@ -256,6 +288,7 @@ export const useExplorerCollectionNodeOperationsMenu = (
       handleDeleteCollection,
       handleOpenInNewTab,
       handleOpenInSplitView,
+      handleRename,
       handleShowEdit,
       handleToggleFavoriteCollection,
       t,

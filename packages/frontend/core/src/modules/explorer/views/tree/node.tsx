@@ -61,12 +61,9 @@ export interface BaseExplorerTreeNodeProps {
   icon?: ExplorerTreeNodeIcon;
   children?: React.ReactNode;
   active?: boolean;
-  defaultRenaming?: boolean;
   extractEmojiAsIcon?: boolean;
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
-  renameable?: boolean;
-  onRename?: (newName: string) => void;
   disabled?: boolean;
   onClick?: () => void;
   to?: To;
@@ -81,6 +78,10 @@ export interface BaseExplorerTreeNodeProps {
 }
 
 interface WebExplorerTreeNodeProps extends BaseExplorerTreeNodeProps {
+  renameable?: boolean;
+  onRename?: (newName: string) => void;
+  defaultRenaming?: boolean;
+
   canDrop?: DropTargetOptions<AffineDNDData>['canDrop'];
   reorderable?: boolean;
   dndData?: AffineDNDData;
