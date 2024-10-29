@@ -2,11 +2,11 @@ import { openSettingModalAtom } from '@affine/core/components/atoms';
 import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import {
   AddPageButton,
-  AppDownloadButton,
   AppSidebar,
   CategoryDivider,
   MenuItem,
   MenuLinkItem,
+  OpenInAppCard,
   QuickSearchInput,
   SidebarContainer,
   SidebarScrollableContainer,
@@ -177,7 +177,7 @@ export const RootAppSidebar = (): ReactElement => {
         </div>
       </SidebarScrollableContainer>
       <SidebarContainer>
-        {BUILD_CONFIG.isElectron ? <UpdaterButton /> : <AppDownloadButton />}
+        {BUILD_CONFIG.isElectron ? <UpdaterButton /> : <OpenInAppCard />}
       </SidebarContainer>
     </AppSidebar>
   );

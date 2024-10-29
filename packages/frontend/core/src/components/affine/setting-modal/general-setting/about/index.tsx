@@ -5,11 +5,8 @@ import {
   SettingWrapper,
 } from '@affine/component/setting-components';
 import { useAppUpdater } from '@affine/core/components/hooks/use-app-updater';
-import {
-  appIconMap,
-  appNames,
-} from '@affine/core/modules/open-in-app/constant';
 import { UrlService } from '@affine/core/modules/url';
+import { appIconMap, appNames } from '@affine/core/utils';
 import { useI18n } from '@affine/i18n';
 import { mixpanel } from '@affine/track';
 import { ArrowRightSmallIcon, OpenInNewIcon } from '@blocksuite/icons/rc';

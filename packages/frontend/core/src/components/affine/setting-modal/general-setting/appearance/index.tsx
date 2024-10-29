@@ -16,6 +16,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useAppSettingHelper } from '../../../../../components/hooks/affine/use-app-setting-helper';
 import { LanguageMenu } from '../../../language-menu';
+import { OpenInAppLinksMenu } from './links';
 import { settingWrapper } from './style.css';
 import { ThemeEditorSetting } from './theme-editor-setting';
 
@@ -106,6 +107,17 @@ export const AppearanceSettings = () => {
         {enableThemeEditor ? <ThemeEditorSetting /> : null}
       </SettingWrapper>
 
+      {BUILD_CONFIG.isWeb ? (
+        <SettingWrapper title={t['com.affine.setting.appearance.links']()}>
+          <SettingRow
+            name={t['com.affine.setting.appearance.open-in-app']()}
+            desc={t['com.affine.setting.appearance.open-in-app.hint']()}
+            data-testid="open-in-app-links-trigger"
+          >
+            <OpenInAppLinksMenu />
+          </SettingRow>
+        </SettingWrapper>
+      ) : null}
       {BUILD_CONFIG.isElectron ? (
         <SettingWrapper
           title={t['com.affine.appearanceSettings.sidebar.title']()}

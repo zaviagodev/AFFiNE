@@ -19,7 +19,7 @@ import { IsFavoriteIcon } from '@affine/core/components/pure/icons';
 import { useDetailPageHeaderResponsive } from '@affine/core/desktop/pages/workspace/detail-page/use-header-responsive';
 import { DocInfoService } from '@affine/core/modules/doc-info';
 import { EditorService } from '@affine/core/modules/editor';
-import { getOpenUrlInDesktopAppLink } from '@affine/core/modules/open-in-app/utils';
+import { OpenInAppService } from '@affine/core/modules/open-in-app/services';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { ViewService } from '@affine/core/modules/workbench/services/view';
 import { WorkspaceFlavour } from '@affine/env/workspace';
@@ -42,7 +42,12 @@ import {
   SplitViewIcon,
   TocIcon,
 } from '@blocksuite/icons/rc';
-import { useLiveData, useService, WorkspaceService } from '@toeverything/infra';
+import {
+  useLiveData,
+  useService,
+  useServiceOptional,
+  WorkspaceService,
+} from '@toeverything/infra';
 import { useSetAtom } from 'jotai';
 import { useCallback, useState } from 'react';
 
@@ -79,6 +84,7 @@ export const PageHeaderMenuButton = ({
   const primaryMode = useLiveData(editorService.editor.doc.primaryMode$);
 
   const workbench = useService(WorkbenchService).workbench;
+  const openInAppService = useServiceOptional(OpenInAppService);
 
   const { favorite, toggleFavorite } = useFavorite(pageId);
 
@@ -261,11 +267,8 @@ export const PageHeaderMenuButton = ({
   );
 
   const onOpenInDesktop = useCallback(() => {
-    const url = getOpenUrlInDesktopAppLink(window.location.href, true);
-    if (url) {
-      window.open(url, '_blank');
-    }
-  }, []);
+    openInAppService?.showOpenInAppPage();
+  }, [openInAppService]);
 
   const EditMenu = (
     <>
@@ -371,7 +374,8 @@ export const PageHeaderMenuButton = ({
         data-testid="editor-option-menu-delete"
         onSelect={handleOpenTrashModal}
       />
-      {BUILD_CONFIG.isWeb ? (
+      {BUILD_CONFIG.isWeb &&
+      workspace.flavour === WorkspaceFlavour.AFFINE_CLOUD ? (
         <MenuItem
           prefixIcon={<LocalWorkspaceIcon />}
           data-testid="editor-option-menu-link"

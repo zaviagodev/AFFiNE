@@ -6,10 +6,10 @@ import { buildType, isDev } from './config';
 import { logger } from './logger';
 import { uiSubjects } from './ui';
 import {
-  addTab,
+  addTabWithUrl,
   getMainWindow,
+  loadUrlInActiveTab,
   openUrlInHiddenWindow,
-  openUrlInMainWindow,
   showMainWindow,
 } from './windows-manager';
 
@@ -88,22 +88,11 @@ async function handleAffineUrl(url: string) {
   ) {
     // @todo(@forehalo): refactor router utilities
     // basename of /workspace/xxx/yyy is /workspace/xxx
-    const basename = urlObj.pathname.split('/').slice(0, 3).join('/');
-    const pathname = '/' + urlObj.pathname.split('/').slice(3).join('/');
-
-    await addTab({
-      basename,
-      show: true,
-      view: {
-        path: {
-          pathname: pathname,
-        },
-      },
-    });
+    await addTabWithUrl(url);
   } else {
     const hiddenWindow = urlObj.searchParams.get('hidden')
       ? await openUrlInHiddenWindow(urlObj)
-      : await openUrlInMainWindow(urlObj);
+      : await loadUrlInActiveTab(url);
 
     const main = await getMainWindow();
     if (main && hiddenWindow) {

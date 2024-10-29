@@ -273,15 +273,3 @@ export async function openUrlInHiddenWindow(urlObj: URL) {
   });
   return win;
 }
-
-// TODO(@pengx17): somehow the page won't load the url passed, help needed
-export async function openUrlInMainWindow(urlObj: URL) {
-  const url = transformToAppUrl(urlObj);
-  logger.info('loading page at', url);
-  const mainWindow = await getMainWindow();
-  if (mainWindow) {
-    await mainWindow.loadURL(url);
-  }
-
-  return null;
-}

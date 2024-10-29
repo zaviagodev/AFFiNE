@@ -18,14 +18,14 @@ const UpgradeSuccessLayout = ({
   const t = useI18n();
   const [params] = useSearchParams();
 
-  const { jumpToIndex, openInApp } = useNavigateHelper();
+  const { jumpToIndex, jumpToOpenInApp } = useNavigateHelper();
   const openAffine = useCallback(() => {
     if (params.get('scheme')) {
-      openInApp(params.get('scheme') ?? 'affine', 'bring-to-front');
+      jumpToOpenInApp('bring-to-front');
     } else {
       jumpToIndex();
     }
-  }, [jumpToIndex, openInApp, params]);
+  }, [jumpToIndex, jumpToOpenInApp, params]);
 
   const subtitle = (
     <div className={styles.leftContentText}>

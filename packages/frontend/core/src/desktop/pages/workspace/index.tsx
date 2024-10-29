@@ -97,10 +97,7 @@ export const Component = (): ReactElement => {
   }, [listLoading, meta, workspaceNotFound, workspacesService]);
 
   if (workspaceNotFound) {
-    if (
-      !BUILD_CONFIG.isElectron /* only browser has share page */ &&
-      detailDocRoute
-    ) {
+    if (detailDocRoute) {
       return (
         <SharePage
           docId={detailDocRoute.docId}

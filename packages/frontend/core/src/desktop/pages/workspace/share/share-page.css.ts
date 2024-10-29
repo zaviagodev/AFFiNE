@@ -6,6 +6,7 @@ export const root = style({
   height: '100%',
   overflow: 'hidden',
   width: '100%',
+  flexDirection: 'column',
 });
 
 export const mainContainer = style({
@@ -55,4 +56,10 @@ export const linkText = style({
   fontSize: cssVar('fontBase'),
   fontWeight: 700,
   whiteSpace: 'nowrap',
+});
+
+export const shareCard = style({
+  position: 'fixed',
+  bottom: '16px',
+  left: '16px',
 });
