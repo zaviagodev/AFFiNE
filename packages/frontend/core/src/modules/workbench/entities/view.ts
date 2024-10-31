@@ -30,7 +30,7 @@ export class View extends Entity<{
 
   sidebarTabs$ = new LiveData<SidebarTab[]>([]);
 
-  scrollPositions: WeakMap<Location, number> = new WeakMap();
+  scrollPositions = new WeakMap<Location, number>();
 
   // _activeTabId may point to a non-existent tab.
   // In this case, we still retain the activeTabId data and wait for the non-existent tab to be mounted.

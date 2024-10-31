@@ -242,7 +242,6 @@ const DetailPageImpl = memo(function DetailPageImpl() {
 
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
-  const scrollPosition = view.scrollPositions.get(view.history.location);
 
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
@@ -250,21 +249,22 @@ const DetailPageImpl = memo(function DetailPageImpl() {
 
       const hasScrollTop = scrollTop > 0;
       setHasScrollTop(hasScrollTop);
-      if (scrollPosition === scrollTop || scrolled) {
-        view.setScrollPosition(scrollTop);
-      }
+      view.setScrollPosition(scrollTop);
     },
-    [scrollPosition, scrolled, view]
+    [view]
   );
 
   useEffect(() => {
-    if (mode === 'page' && !editor.selector$.value?.blockIds) {
+    if (mode === 'page') {
       setTimeout(() => {
-        scrollViewportRef?.current?.scrollTo(0, scrollPosition || 0);
+        scrollViewportRef?.current?.scrollTo(
+          0,
+          view.scrollPositions.get(view.history.location) || 0
+        );
         setScrolled(true);
-      }, 0);
+      }, 50);
     }
-  }, [editor.selector$.value?.blockIds, mode, scrollPosition, scrolled, view]);
+  }, [mode, scrolled, view]);
 
   return (
     <FrameworkScope scope={editor.scope}>
