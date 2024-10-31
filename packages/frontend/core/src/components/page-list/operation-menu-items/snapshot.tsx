@@ -107,6 +107,11 @@ export const Snapshot = ({ className }: SnapshotProps) => {
       const file = await openFileOrFiles({ acceptType: 'Zip' });
       if (!file) return null;
 
+      track.$.header.snapshot.import({
+        type: 'snapshot',
+        status: 'importing',
+      });
+
       const importedDocs = (
         await ZipTransformer.importDocs(docCollection, file)
       ).filter(doc => doc !== undefined);
@@ -122,12 +127,24 @@ export const Snapshot = ({ className }: SnapshotProps) => {
         title: 'Imported Snapshot Successfully',
         message: `Imported ${importedDocs.length} doc(s)`,
       });
+      track.$.header.snapshot.import({
+        type: 'snapshot',
+        status: 'success',
+        result: {
+          docCount: importedDocs.length,
+        },
+      });
       return importedDocs;
     } catch (error) {
       console.error('Error importing snapshot:', error);
       notify.error({
         title: 'Import Snapshot Failed',
         message: 'Failed to import snapshot. Please try again.',
+      });
+      track.$.header.snapshot.import({
+        type: 'snapshot',
+        status: 'failed',
+        error: error instanceof Error ? error.message : undefined,
       });
       return null;
     }
@@ -165,6 +182,9 @@ export const Snapshot = ({ className }: SnapshotProps) => {
         case 'import':
           return handleImportSnapshot();
         case 'export':
+          track.$.header.snapshot.export({
+            type: 'snapshot',
+          });
           return exportHandler('snapshot');
         case 'disable':
           return disableSnapshotActionOption();

@@ -5,6 +5,7 @@ import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hoo
 import { useSystemOnline } from '@affine/core/components/hooks/use-system-online';
 import { DesktopApiService } from '@affine/core/modules/desktop-api/service';
 import { useI18n } from '@affine/i18n';
+import track from '@affine/track';
 import {
   useService,
   type Workspace,
@@ -33,6 +34,9 @@ export const DesktopExportPanel = ({
     }
     setSaving(true);
     try {
+      track.$.settingsPanel.workspace.export({
+        type: 'workspace',
+      });
       if (isOnline) {
         await workspace.engine.waitForDocSynced();
         await workspace.engine.blob.sync();

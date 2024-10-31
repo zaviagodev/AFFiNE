@@ -2,6 +2,7 @@ import { Button, IconButton, Modal } from '@affine/component';
 import { UrlService } from '@affine/core/modules/url';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { useI18n } from '@affine/i18n';
+import track from '@affine/track';
 import {
   MarkdownTransformer,
   NotionHtmlTransformer,
@@ -294,19 +295,35 @@ export const ImportModal = ({ ...modalProps }) => {
         }
 
         setStatus('importing');
+        track.$.importModal.$.import({
+          type,
+          status: 'importing',
+        });
 
         const pageIds = await importConfig.importFunction(docCollection, file);
 
         setPageIds(pageIds);
         setStatus('success');
+        track.$.importModal.$.import({
+          type,
+          status: 'success',
+          result: {
+            docCount: pageIds.length,
+          },
+        });
       } catch (error) {
         setImportError(
           error instanceof Error ? error.message : 'Unknown error occurred'
         );
         setStatus('error');
+        track.$.importModal.$.import({
+          type,
+          status: 'failed',
+          error: importError || undefined,
+        });
       }
     },
-    [docCollection, t]
+    [docCollection, t, importError]
   );
 
   const handleComplete = useCallback(() => {

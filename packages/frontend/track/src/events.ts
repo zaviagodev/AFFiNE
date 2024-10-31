@@ -121,7 +121,6 @@ type UserEvents =
   | AuthEvents
   | AccountEvents
   | PaymentEvents;
-
 interface PageDivision {
   [page: string]: {
     [segment: string]: {
@@ -152,7 +151,7 @@ const PageEvents = {
     },
     settingsPanel: {
       menu: ['openSettings'],
-      workspace: ['viewPlans'],
+      workspace: ['viewPlans', 'export'],
       profileAndBadge: ['viewPlans'],
       accountUsage: ['viewPlans'],
       accountSettings: ['uploadAvatar', 'removeAvatar', 'updateUserName'],
@@ -214,7 +213,8 @@ const PageEvents = {
         'openChangelog',
         'dismissChangelog',
       ],
-      others: ['navigate', 'import'],
+      others: ['navigate'],
+      importModal: ['open'],
       workspaceList: [
         'open',
         'signIn',
@@ -230,6 +230,9 @@ const PageEvents = {
     },
     docHistory: {
       $: ['open', 'close', 'switchPageMode', 'viewPlans'],
+    },
+    importModal: {
+      $: ['open', 'import'],
     },
     paywall: {
       storage: ['viewPlans'],
@@ -259,6 +262,8 @@ const PageEvents = {
       ],
       history: ['open'],
       pageInfo: ['open'],
+      importModal: ['open'],
+      snapshot: ['import', 'export'],
     },
   },
   doc: {
@@ -354,6 +359,16 @@ type AuthArgs = {
   provider?: string;
 };
 
+type ImportStatus = 'importing' | 'failed' | 'success';
+type ImportArgs = {
+  type: string;
+  status?: ImportStatus;
+  error?: string;
+  result?: {
+    docCount: number;
+  };
+};
+
 export type EventArgs = {
   createWorkspace: { flavour: string };
   signIn: AuthArgs;
@@ -393,6 +408,7 @@ export type EventArgs = {
   copyShareLink: {
     type: 'default' | 'doc' | 'whiteboard' | 'block' | 'element';
   };
+  import: ImportArgs;
   export: { type: string };
   copyBlockToLink: {
     type: string;

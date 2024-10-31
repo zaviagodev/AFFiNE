@@ -118,6 +118,7 @@ export const RootAppSidebar = (): ReactElement => {
   }, [setOpenSettingModalAtom]);
 
   const onOpenImportModal = useCallback(() => {
+    track.$.navigationPanel.importModal.open();
     setOpenImportModalAtom(true);
   }, [setOpenImportModalAtom]);
 

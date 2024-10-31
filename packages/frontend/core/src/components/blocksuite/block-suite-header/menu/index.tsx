@@ -200,7 +200,7 @@ export const PageHeaderMenuButton = ({
   }, [duplicate, pageId]);
 
   const handleOpenImportModal = useCallback(() => {
-    track.$.header.docOptions.import();
+    track.$.header.importModal.open();
     setOpenImportModalAtom(true);
   }, [setOpenImportModalAtom]);
 
