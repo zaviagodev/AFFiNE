@@ -269,7 +269,7 @@ export const getSelectedImagesAsBlobs = async (host: EditorHost) => {
 };
 
 export const getSelectedNoteAnchor = (host: EditorHost, id: string) => {
-  return host.querySelector(`[data-portal-block-id="${id}"] .note-background`);
+  return host.querySelector(`affine-edgeless-note[data-block-id="${id}"]`);
 };
 
 export function getCopilotSelectedElems(

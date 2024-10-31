@@ -27,3 +27,4 @@ export const generatingStages: {
 };
 
 export const INSERT_ABOVE_ACTIONS = ['createHeadings'];
+export const TOGGLE_EMPTY_INPUT_ACTIONS = ['createImage', 'makeItReal'];

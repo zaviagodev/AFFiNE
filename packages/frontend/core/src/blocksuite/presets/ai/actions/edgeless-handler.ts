@@ -16,6 +16,7 @@ import {
 } from '@blocksuite/affine/blocks';
 import { assertExists } from '@blocksuite/affine/global/utils';
 import { Slice } from '@blocksuite/affine/store';
+import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
 import { AIChatBlockModel } from '@toeverything/infra';
 import type { TemplateResult } from 'lit';
 
@@ -216,7 +217,8 @@ function actionToStream<T extends keyof BlockSuitePresets.AIActions>(
     attachments?: (string | Blob)[];
     seed?: string;
   } | void>,
-  trackerOptions?: BlockSuitePresets.TrackerOptions
+  trackerOptions?: BlockSuitePresets.TrackerOptions,
+  panelInput?: string
 ) {
   const action = AIProvider.actions[id];
 
@@ -234,6 +236,7 @@ function actionToStream<T extends keyof BlockSuitePresets.AIActions>(
             ...variants,
             signal,
             input: '',
+            content: panelInput ?? '',
             stream: true,
             control,
             where,
@@ -243,7 +246,14 @@ function actionToStream<T extends keyof BlockSuitePresets.AIActions>(
             workspaceId: host.doc.collection.id,
           } as Parameters<typeof action>[0];
 
-          const data = await extract(host, ctx);
+          const rawData = await extract(host, ctx);
+          const data = rawData
+            ? Object.fromEntries(
+                Object.entries(rawData).filter(
+                  ([_, v]) => v !== undefined && v !== ''
+                )
+              )
+            : undefined;
           if (data) {
             Object.assign(options, data);
           }
@@ -305,6 +315,7 @@ function actionToGeneration<T extends keyof BlockSuitePresets.AIActions>(
 ) {
   return (host: EditorHost, ctx: CtxRecord) => {
     return ({
+      input: panelInput,
       signal,
       update,
       finish,
@@ -324,7 +335,8 @@ function actionToGeneration<T extends keyof BlockSuitePresets.AIActions>(
         signal,
         variants,
         extract,
-        trackerOptions
+        trackerOptions,
+        panelInput
       )?.(host, ctx);
 
       if (!stream) return;
@@ -416,7 +428,8 @@ export function actionToHandler<T extends keyof BlockSuitePresets.AIActions>(
     attachments?: (string | Blob)[];
     seed?: string;
   } | void>,
-  trackerOptions?: BlockSuitePresets.TrackerOptions
+  trackerOptions?: BlockSuitePresets.TrackerOptions,
+  toggleEmptyInput?: boolean
 ) {
   return (host: EditorHost) => {
     const aiPanel = getAIPanel(host);
@@ -466,14 +479,19 @@ export function actionToHandler<T extends keyof BlockSuitePresets.AIActions>(
     } else if (!isEmpty) {
       const lastSelected = selectedElements.at(-1)?.id;
       assertExists(lastSelected);
-      referenceElement = getSelectedNoteAnchor(host, lastSelected);
+      const noteAnchor = getSelectedNoteAnchor(host, lastSelected);
+      referenceElement = noteAnchor;
     }
 
-    if (!referenceElement) return;
+    if (!referenceElement) {
+      const gfx = host.std.get(GfxControllerIdentifier);
+      gfx?.tool.setTool({ type: 'default' });
+      return;
+    }
 
     if (isCreateImageAction || isMakeItRealAction) {
       togglePanel = async () => {
-        if (isEmpty) return true;
+        if (isEmpty || toggleEmptyInput) return true;
         const { notes, shapes, images, edgelessTexts, embedSyncedDocs } =
           BlocksUtils.splitElements(selectedElements);
         const blocks = [
@@ -494,7 +512,11 @@ export function actionToHandler<T extends keyof BlockSuitePresets.AIActions>(
 
     togglePanel()
       .then(isEmpty => {
-        aiPanel.toggle(referenceElement, isEmpty ? undefined : 'placeholder');
+        aiPanel.toggle(
+          referenceElement,
+          isEmpty ? undefined : 'placeholder',
+          false
+        );
       })
       .catch(console.error);
   };
