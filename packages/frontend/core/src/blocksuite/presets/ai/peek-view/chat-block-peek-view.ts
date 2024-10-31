@@ -13,7 +13,7 @@ import {
   type ChatMessage,
   ChatMessagesSchema,
 } from '@toeverything/infra/blocksuite';
-import { html, LitElement, nothing } from 'lit';
+import { html, LitElement, nothing, type PropertyValues } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
 import { repeat } from 'lit/directives/repeat.js';
@@ -127,6 +127,13 @@ export class AIChatBlockPeekView extends LitElement {
       currentSessionId: null,
       currentChatBlockId: null,
     });
+  };
+
+  private readonly _scrollMessageContainerToBottom = () => {
+    if (this._chatMessagesContainer) {
+      this._chatMessagesContainer.scrollTop =
+        this._chatMessagesContainer.scrollHeight;
+    }
   };
 
   /**
@@ -450,12 +457,18 @@ export class AIChatBlockPeekView extends LitElement {
 
   override firstUpdated() {
     // first time render, scroll ai-chat-messages-container to bottom
-    requestAnimationFrame(() => {
-      if (this._chatMessagesContainer) {
-        this._chatMessagesContainer.scrollTop =
-          this._chatMessagesContainer.scrollHeight;
-      }
-    });
+    requestAnimationFrame(this._scrollMessageContainerToBottom);
+  }
+
+  override updated(changedProperties: PropertyValues) {
+    super.updated(changedProperties);
+    if (
+      changedProperties.has('chatContext') &&
+      this.chatContext.status === 'transmitting' &&
+      this.chatContext.messages.length
+    ) {
+      requestAnimationFrame(this._scrollMessageContainerToBottom);
+    }
   }
 
   override render() {
