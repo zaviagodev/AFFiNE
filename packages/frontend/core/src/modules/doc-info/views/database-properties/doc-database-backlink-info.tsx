@@ -46,10 +46,12 @@ const DatabaseBacklinkCell = ({
   cell,
   dataSource,
   rowId,
+  onChange,
 }: {
   cell: DatabaseValueCell;
   dataSource: DatabaseBlockDataSource;
   rowId: string;
+  onChange: (value: unknown) => void;
 }) => {
   const cellType = useLiveData(cell.property.type$);
 
@@ -67,7 +69,12 @@ const DatabaseBacklinkCell = ({
       data-testid="database-backlink-cell"
     >
       <DatabaseBacklinkCellName cell={cell} config={config} />
-      <config.Renderer cell={cell} dataSource={dataSource} rowId={rowId} />
+      <config.Renderer
+        cell={cell}
+        dataSource={dataSource}
+        rowId={rowId}
+        onChange={onChange}
+      />
     </li>
   );
 };
@@ -79,9 +86,15 @@ const DatabaseBacklinkCell = ({
 const DatabaseBacklinkRow = ({
   defaultOpen = false,
   row$,
+  onChange,
 }: {
   defaultOpen: boolean;
   row$: Observable<DatabaseRow | undefined>;
+  onChange?: (
+    row: DatabaseRow,
+    cell: DatabaseValueCell,
+    value: unknown
+  ) => void;
 }) => {
   const row = useLiveData(
     useMemo(() => LiveData.from(row$, undefined), [row$])
@@ -132,6 +145,7 @@ const DatabaseBacklinkRow = ({
               cell={cell}
               dataSource={row.dataSource}
               rowId={row.id}
+              onChange={value => onChange?.(row, cell, value)}
             />
           );
         })}
@@ -142,11 +156,17 @@ const DatabaseBacklinkRow = ({
 
 export const DocDatabaseBacklinkInfo = ({
   defaultOpen = [],
+  onChange,
 }: {
   defaultOpen?: {
     databaseId: string;
     rowId: string;
   }[];
+  onChange?: (
+    row: DatabaseRow,
+    cell: DatabaseValueCell,
+    value: unknown
+  ) => void;
 }) => {
   const doc = useService(DocService).doc;
   const docDatabaseBacklinks = useService(DocDatabaseBacklinksService);
@@ -173,6 +193,7 @@ export const DocDatabaseBacklinkInfo = ({
                 backlink.rowId === rowId
             )}
             row$={row$}
+            onChange={onChange}
           />
           <Divider size="thinner" className={styles.divider} />
         </Fragment>

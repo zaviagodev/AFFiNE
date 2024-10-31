@@ -1,6 +1,7 @@
 import type { TagLike } from '@affine/component/ui/tags';
 import { TagsInlineEditor as TagsInlineEditorComponent } from '@affine/component/ui/tags';
 import { TagService, useDeleteTagConfirmModal } from '@affine/core/modules/tag';
+import track from '@affine/track';
 import {
   LiveData,
   useLiveData,
@@ -38,6 +39,9 @@ export const TagsInlineEditor = ({
   const onCreateTag = useCallback(
     (name: string, color: string) => {
       const newTag = tagService.tagList.createTag(name, color);
+      track.doc.inlineDocInfo.property.editProperty({
+        type: 'tags',
+      });
       return {
         id: newTag.id,
         value: newTag.value$.value,
@@ -50,6 +54,9 @@ export const TagsInlineEditor = ({
   const onSelectTag = useCallback(
     (tagId: string) => {
       tagService.tagList.tagByTagId$(tagId).value?.tag(pageId);
+      track.doc.inlineDocInfo.property.editProperty({
+        type: 'tags',
+      });
     },
     [pageId, tagService.tagList]
   );
@@ -57,6 +64,9 @@ export const TagsInlineEditor = ({
   const onDeselectTag = useCallback(
     (tagId: string) => {
       tagService.tagList.tagByTagId$(tagId).value?.untag(pageId);
+      track.doc.inlineDocInfo.property.editProperty({
+        type: 'tags',
+      });
     },
     [pageId, tagService.tagList]
   );
@@ -68,6 +78,9 @@ export const TagsInlineEditor = ({
       } else if (property === 'color') {
         tagService.tagList.tagByTagId$(id).value?.changeColor(value);
       }
+      track.doc.inlineDocInfo.property.editProperty({
+        type: 'tags',
+      });
     },
     [tagService.tagList]
   );
@@ -77,6 +90,9 @@ export const TagsInlineEditor = ({
   const onTagDelete = useAsyncCallback(
     async (id: string) => {
       await deleteTags([id]);
+      track.doc.inlineDocInfo.property.editProperty({
+        type: 'tags',
+      });
     },
     [deleteTags]
   );

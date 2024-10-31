@@ -64,7 +64,7 @@ export class DocPropertiesStore extends Store {
   createDocPropertyInfo(
     config: Omit<DocCustomPropertyInfo, 'id'> & { id?: string }
   ) {
-    return this.dbService.db.docCustomPropertyInfo.create(config).id;
+    return this.dbService.db.docCustomPropertyInfo.create(config);
   }
 
   removeDocPropertyInfo(id: string) {

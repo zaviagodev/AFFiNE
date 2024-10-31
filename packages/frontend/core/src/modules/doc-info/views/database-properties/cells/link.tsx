@@ -21,6 +21,7 @@ export const LinkCell = ({
   cell,
   dataSource,
   rowId,
+  onChange,
 }: DatabaseCellRendererProps) => {
   const isEmpty = useLiveData(
     cell.value$.map(value => typeof value !== 'string' || !value)
@@ -35,7 +36,8 @@ export const LinkCell = ({
     dataSource.cellValueChange(rowId, cell.id, tempValue.trim());
     setEditing(false);
     setTempValue(tempValue.trim());
-  }, [dataSource, rowId, cell.id, tempValue]);
+    onChange?.(tempValue.trim());
+  }, [dataSource, rowId, cell.id, onChange, tempValue]);
 
   const handleOnChange: ChangeEventHandler<HTMLTextAreaElement> = useCallback(
     e => {

@@ -20,6 +20,7 @@ export const DateCell = ({
   cell,
   rowId,
   dataSource,
+  onChange,
 }: DatabaseCellRendererProps) => {
   const value = useLiveData(
     cell.value$ as LiveData<number | string | undefined>
@@ -34,6 +35,7 @@ export const DateCell = ({
           cell.property.id,
           fromInternalDateString(v)
         );
+        onChange?.(fromInternalDateString(v));
       }}
     />
   );

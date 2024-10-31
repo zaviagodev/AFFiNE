@@ -40,6 +40,7 @@ const renderRichText = ({
 export const RichTextCell = ({
   cell,
   dataSource,
+  onChange,
 }: DatabaseCellRendererProps) => {
   const std = useBlockStdScope(dataSource.doc);
   const text = useLiveData(cell.value$ as LiveData<Y.Text>);
@@ -49,14 +50,19 @@ export const RichTextCell = ({
     if (ref.current) {
       ref.current.innerHTML = '';
       const richText = renderRichText({ doc: dataSource.doc, std, text });
+      const listener = () => {
+        onChange(text);
+      };
       if (richText) {
+        richText.addEventListener('change', listener);
         ref.current.append(richText);
         return () => {
+          richText.removeEventListener('change', listener);
           richText.remove();
         };
       }
     }
     return () => {};
-  }, [dataSource.doc, std, text]);
+  }, [dataSource.doc, onChange, std, text]);
   return <PropertyValue ref={ref}></PropertyValue>;
 };

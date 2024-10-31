@@ -1,6 +1,7 @@
 import { Divider, IconButton } from '@affine/component';
 import { generateUniqueNameInSequence } from '@affine/core/utils/unique-name';
 import { useI18n } from '@affine/i18n';
+import track from '@affine/track';
 import { PlusIcon } from '@blocksuite/icons/rc';
 import {
   Content as CollapsibleContent,
@@ -41,13 +42,17 @@ export const DocPropertySidebar = () => {
       const name = nameExists
         ? generateUniqueNameInSequence(option.name, allNames)
         : option.name;
-      const newPropertyId = propertyList.createProperty({
+      const newProperty = propertyList.createProperty({
         id: typeDefined.uniqueId,
         name,
         type: option.type,
         index: propertyList.indexAt('after'),
       });
-      setNewPropertyId(newPropertyId);
+      setNewPropertyId(newProperty.id);
+      track.doc.sidepanel.property.addProperty({
+        module: 'property list',
+        type: option.type,
+      });
     },
     [propertyList, properties]
   );

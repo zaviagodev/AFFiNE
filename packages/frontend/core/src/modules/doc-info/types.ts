@@ -32,4 +32,5 @@ export interface DatabaseCellRendererProps {
   rowId: string;
   cell: DatabaseValueCell;
   dataSource: DatabaseBlockDataSource;
+  onChange: (value: unknown) => void;
 }

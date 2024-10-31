@@ -4,11 +4,16 @@ import {
   useLitPortalFactory,
 } from '@affine/component';
 import { ServerConfigService } from '@affine/core/modules/cloud';
+import type {
+  DatabaseRow,
+  DatabaseValueCell,
+} from '@affine/core/modules/doc-info/types';
 import { EditorService } from '@affine/core/modules/editor';
 import { EditorSettingService } from '@affine/core/modules/editor-setting';
 import { JournalService } from '@affine/core/modules/journal';
 import { toURLSearchParams } from '@affine/core/modules/navigation';
 import { PeekViewService } from '@affine/core/modules/peek-view/services/peek-view';
+import track from '@affine/track';
 import type { DocMode } from '@blocksuite/affine/blocks';
 import {
   DocTitle,
@@ -17,6 +22,7 @@ import {
 } from '@blocksuite/affine/presets';
 import type { Doc } from '@blocksuite/affine/store';
 import {
+  type DocCustomPropertyInfo,
   DocService,
   DocsService,
   FeatureFlagService,
@@ -247,6 +253,28 @@ export const BlocksuiteDocEditor = forwardRef<
     )
   );
 
+  const onPropertyChange = useCallback((property: DocCustomPropertyInfo) => {
+    track.doc.inlineDocInfo.property.editProperty({
+      type: property.type,
+    });
+  }, []);
+
+  const onPropertyAdded = useCallback((property: DocCustomPropertyInfo) => {
+    track.doc.inlineDocInfo.property.addProperty({
+      type: property.type,
+      module: 'at menu',
+    });
+  }, []);
+
+  const onDatabasePropertyChange = useCallback(
+    (_row: DatabaseRow, cell: DatabaseValueCell) => {
+      track.doc.inlineDocInfo.databaseProperty.editProperty({
+        type: cell.property.type$.value,
+      });
+    },
+    []
+  );
+
   return (
     <>
       <div className={styles.affineDocViewport} style={{ height: '100%' }}>
@@ -256,7 +284,12 @@ export const BlocksuiteDocEditor = forwardRef<
           <BlocksuiteEditorJournalDocTitle page={page} />
         )}
         {!shared ? (
-          <DocPropertiesTable defaultOpenProperty={defaultOpenProperty} />
+          <DocPropertiesTable
+            onDatabasePropertyChange={onDatabasePropertyChange}
+            onPropertyChange={onPropertyChange}
+            onPropertyAdded={onPropertyAdded}
+            defaultOpenProperty={defaultOpenProperty}
+          />
         ) : null}
         <adapted.DocEditor
           className={styles.docContainer}

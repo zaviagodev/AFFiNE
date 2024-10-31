@@ -1,7 +1,12 @@
 import { MenuItem, MenuSeparator } from '@affine/component';
 import { generateUniqueNameInSequence } from '@affine/core/utils/unique-name';
 import { useI18n } from '@affine/i18n';
-import { DocsService, useLiveData, useService } from '@toeverything/infra';
+import {
+  type DocCustomPropertyInfo,
+  DocsService,
+  useLiveData,
+  useService,
+} from '@toeverything/infra';
 import { useCallback } from 'react';
 
 import {
@@ -15,7 +20,7 @@ export const CreatePropertyMenuItems = ({
   onCreated,
 }: {
   at?: 'before' | 'after';
-  onCreated?: (propertyId: string) => void;
+  onCreated?: (property: DocCustomPropertyInfo) => void;
 }) => {
   const t = useI18n();
   const docsService = useService(DocsService);
@@ -36,13 +41,13 @@ export const CreatePropertyMenuItems = ({
         ? generateUniqueNameInSequence(option.name, allNames)
         : option.name;
       const uniqueId = typeDefined.uniqueId;
-      const newPropertyId = propertyList.createProperty({
+      const newProperty = propertyList.createProperty({
         id: uniqueId,
         name,
         type: option.type,
         index: propertyList.indexAt(at),
       });
-      onCreated?.(newPropertyId);
+      onCreated?.(newProperty);
     },
     [at, onCreated, propertyList, properties]
   );

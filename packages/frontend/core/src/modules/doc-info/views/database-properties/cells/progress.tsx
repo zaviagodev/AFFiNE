@@ -9,6 +9,7 @@ export const ProgressCell = ({
   cell,
   dataSource,
   rowId,
+  onChange,
 }: DatabaseCellRendererProps) => {
   const value = useLiveData(cell.value$ as LiveData<number>);
   const isEmpty = value === undefined;
@@ -27,6 +28,7 @@ export const ProgressCell = ({
         }}
         onBlur={() => {
           dataSource.cellValueChange(rowId, cell.id, localValue);
+          onChange?.(localValue);
         }}
       />
     </PropertyValue>

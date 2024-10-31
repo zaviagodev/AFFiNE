@@ -4,7 +4,13 @@ import { DocPropertyManager } from '@affine/core/components/doc-properties/manag
 import { CreatePropertyMenuItems } from '@affine/core/components/doc-properties/menu/create-doc-property';
 import { useWorkspaceInfo } from '@affine/core/components/hooks/use-workspace-info';
 import { Trans, useI18n } from '@affine/i18n';
-import { FrameworkScope, type WorkspaceMetadata } from '@toeverything/infra';
+import track from '@affine/track';
+import {
+  type DocCustomPropertyInfo,
+  FrameworkScope,
+  type WorkspaceMetadata,
+} from '@toeverything/infra';
+import { useCallback } from 'react';
 
 import { useWorkspace } from '../../../../../components/hooks/use-workspace';
 import * as styles from './styles.css';
@@ -12,10 +18,16 @@ import * as styles from './styles.css';
 const WorkspaceSettingPropertiesMain = () => {
   const t = useI18n();
 
+  const onCreated = useCallback((property: DocCustomPropertyInfo) => {
+    track.$.settingsPanel.workspace.addProperty({
+      type: property.type,
+    });
+  }, []);
+
   return (
     <div className={styles.main}>
       <div className={styles.listHeader}>
-        <Menu items={<CreatePropertyMenuItems />}>
+        <Menu items={<CreatePropertyMenuItems onCreated={onCreated} />}>
           <Button variant="primary">
             {t['com.affine.settings.workspace.properties.add_property']()}
           </Button>

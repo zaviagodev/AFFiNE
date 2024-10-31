@@ -8,6 +8,7 @@ export const CheckboxCell = ({
   cell,
   rowId,
   dataSource,
+  onChange,
 }: DatabaseCellRendererProps) => {
   const value = useLiveData(cell.value$ as LiveData<boolean>);
   return (
@@ -16,6 +17,7 @@ export const CheckboxCell = ({
       value={value ? 'true' : 'false'}
       onChange={v => {
         dataSource.cellValueChange(rowId, cell.property.id, v === 'true');
+        onChange?.(v === 'true');
       }}
     />
   );

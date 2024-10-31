@@ -12,10 +12,15 @@ import {
   DocDatabaseBacklinkInfo,
   DocInfoService,
 } from '@affine/core/modules/doc-info';
+import type {
+  DatabaseRow,
+  DatabaseValueCell,
+} from '@affine/core/modules/doc-info/types';
 import { DocsSearchService } from '@affine/core/modules/docs-search';
 import { useI18n } from '@affine/i18n';
+import track from '@affine/track';
 import { PlusIcon } from '@blocksuite/icons/rc';
-import type { Doc } from '@toeverything/infra';
+import type { Doc, DocCustomPropertyInfo } from '@toeverything/infra';
 import {
   DocsService,
   FrameworkScope,
@@ -121,6 +126,23 @@ export const InfoTable = ({
     )
   );
 
+  const onBacklinkPropertyChange = useCallback(
+    (_row: DatabaseRow, cell: DatabaseValueCell, _value: unknown) => {
+      track.$.docInfoPanel.databaseProperty.editProperty({
+        type: cell.property.type$.value,
+      });
+    },
+    []
+  );
+
+  const onPropertyAdded = useCallback((property: DocCustomPropertyInfo) => {
+    setNewPropertyId(property.id);
+    track.$.docInfoPanel.property.addProperty({
+      type: property.type,
+      module: 'at menu',
+    });
+  }, []);
+
   return (
     <>
       {backlinks && backlinks.length > 0 ? (
@@ -174,7 +196,7 @@ export const InfoTable = ({
             />
           ))}
           <Menu
-            items={<CreatePropertyMenuItems onCreated={setNewPropertyId} />}
+            items={<CreatePropertyMenuItems onCreated={onPropertyAdded} />}
             contentOptions={{
               onClick(e) {
                 e.stopPropagation();
@@ -192,7 +214,7 @@ export const InfoTable = ({
         </PropertyCollapsibleContent>
       </PropertyCollapsibleSection>
       <Divider size="thinner" />
-      <DocDatabaseBacklinkInfo />
+      <DocDatabaseBacklinkInfo onChange={onBacklinkPropertyChange} />
     </>
   );
 };

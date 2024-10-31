@@ -7,6 +7,7 @@ export const NumberCell = ({
   cell,
   rowId,
   dataSource,
+  onChange,
 }: DatabaseCellRendererProps) => {
   const value = useLiveData(cell.value$);
   return (
@@ -14,6 +15,7 @@ export const NumberCell = ({
       value={value}
       onChange={v => {
         dataSource.cellValueChange(rowId, cell.property.id, v);
+        onChange?.(v);
       }}
     />
   );
