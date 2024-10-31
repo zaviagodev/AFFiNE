@@ -1,13 +1,21 @@
-import { Modal } from '@affine/component';
+import { Modal, type ModalProps } from '@affine/component';
 import { useMount } from '@toeverything/infra';
 import { cssVar } from '@toeverything/theme';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { BaseSelectorDialogProps } from '.';
+export interface BaseSelectorDialogProps<T> {
+  init?: T;
+  onConfirm?: (data: T) => void;
+  onCancel?: () => void;
+}
 
-export const useSelectDialog = function useSelectDialog<T>(
-  Component: React.FC<BaseSelectorDialogProps<T>>,
-  debugKey?: string
+const defaultModalProps: Partial<Omit<ModalProps, 'children'>> = {};
+export const useSelectDialog = function useSelectDialog<T, P>(
+  Component: React.FC<BaseSelectorDialogProps<T> & P>,
+  debugKey?: string,
+  options?: {
+    modalProps?: Partial<Omit<ModalProps, 'children'>>;
+  }
 ) {
   // to control whether the dialog is open, it's not equal to !!value
   // when closing the dialog, show will be `false` first, then after the animation, value turns to `undefined`
@@ -16,6 +24,7 @@ export const useSelectDialog = function useSelectDialog<T>(
     init?: T;
     onConfirm: (v: T) => void;
   }>();
+  const [additionalProps, setAdditionalProps] = useState<Record<string, any>>();
 
   const onOpenChanged = useCallback((open: boolean) => {
     if (!open) setValue(undefined);
@@ -28,9 +37,10 @@ export const useSelectDialog = function useSelectDialog<T>(
    * Open a dialog to select items
    */
   const open = useCallback(
-    (ids?: T) => {
+    (ids?: T, additionalProps?: P) => {
       return new Promise<T>(resolve => {
         setShow(true);
+        setAdditionalProps(additionalProps);
         setValue({
           init: ids,
           onConfirm: list => {
@@ -46,6 +56,9 @@ export const useSelectDialog = function useSelectDialog<T>(
   const { mount } = useMount(debugKey);
 
   useEffect(() => {
+    const { contentOptions, ...otherModalProps } =
+      options?.modalProps ?? defaultModalProps;
+
     return mount(
       <Modal
         open={show}
@@ -59,18 +72,31 @@ export const useSelectDialog = function useSelectDialog<T>(
             maxWidth: 976,
             background: cssVar('backgroundPrimaryColor'),
           },
+          ...contentOptions,
         }}
+        {...otherModalProps}
       >
         {value ? (
           <Component
             init={value.init}
             onCancel={close}
             onConfirm={value.onConfirm}
+            {...additionalProps}
           />
         ) : null}
       </Modal>
     );
-  }, [Component, close, mount, onOpenChanged, show, value]);
+  }, [
+    Component,
+    additionalProps,
+    close,
+    debugKey,
+    mount,
+    onOpenChanged,
+    options?.modalProps,
+    show,
+    value,
+  ]);
 
   return open;
 };

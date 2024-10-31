@@ -7,7 +7,7 @@ export const globalVars = {
 
 globalStyle(':root', {
   vars: {
-    [globalVars.appTabHeight]: '62px',
+    [globalVars.appTabHeight]: BUILD_CONFIG.isIOS ? '49px' : '62px',
   },
 });
 

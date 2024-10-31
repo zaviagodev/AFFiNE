@@ -1365,8 +1365,13 @@
   "com.affine.m.explorer.tag.rename-confirm": "Done",
   "com.affine.m.explorer.tag.new-tip-empty": "Create a tag in this workspace.",
   "com.affine.m.explorer.tag.new-tip-not-empty": "Create \"{{value}}\" tag in this workspace.",
+  "com.affine.m.explorer.tag.manage-docs": "Manage Doc(s)",
   "com.affine.m.explorer.collection.rename": "Rename",
   "com.affine.m.explorer.collection.rename-menu-title": "Rename Collection",
   "com.affine.m.explorer.collection.new-dialog-title": "Create Collection",
-  "com.affine.m.explorer.doc.rename": "Rename"
+  "com.affine.m.explorer.doc.rename": "Rename",
+  "com.affine.m.selector.confirm-default": "Apply",
+  "com.affine.m.selector.doc-select-total-tag": "{{total}} Doc(s) in this Tag",
+  "com.affine.m.selector.doc-select-added": "Add {{count}} Doc(s)",
+  "com.affine.m.selector.doc-select-removed": "Remove {{count}} Doc(s)"
 }

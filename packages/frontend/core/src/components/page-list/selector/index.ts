@@ -3,11 +3,7 @@ import { SelectTag } from '../tags';
 import { SelectPage } from '../view/edit-collection/select-page';
 import { useSelectDialog } from './use-select-dialog';
 
-export interface BaseSelectorDialogProps<T> {
-  init?: T;
-  onConfirm?: (data: T) => void;
-  onCancel?: () => void;
-}
+export * from './use-select-dialog';
 
 /**
  * Return a `open` function to open the select collection dialog.
