@@ -67,11 +67,39 @@
     if (typeof document !== 'undefined') {
       globalThis.addEventListener('unhandledrejection', handler);
       globalThis.addEventListener('error', handler);
+
+      return function () {
+        globalThis.removeEventListener('unhandledrejection', handler);
+        globalThis.removeEventListener('error', handler);
+      };
+    }
+
+    return null;
+  }
+
+  function unregisterRegisterGlobalErrorHandler(fn) {
+    if (typeof fn === 'function') {
+      var app = document.getElementById('app');
+      if (app) {
+        var ob = new MutationObserver(function () {
+          fn();
+          ob.disconnect();
+          ob = null;
+        });
+
+        ob.observe(app, { childList: true });
+      }
     }
   }
 
   function ensureBasicEnvironment() {
-    var globals = ['Promise', 'Map', 'fetch', 'customElements'];
+    var globals = [
+      'Promise',
+      'Map',
+      'fetch',
+      'customElements',
+      'MutationObserver',
+    ];
 
     // eslint-disable-next-line @typescript-eslint/prefer-for-of
     for (var i = 0; i < globals.length; i++) {
@@ -82,6 +110,7 @@
     }
   }
 
-  registerGlobalErrorHandler();
   ensureBasicEnvironment();
+  var goodtogo = registerGlobalErrorHandler();
+  unregisterRegisterGlobalErrorHandler(goodtogo);
 })();
