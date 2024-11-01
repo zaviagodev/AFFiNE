@@ -222,9 +222,7 @@ export class DocRendererController {
         readFileSync(manifestPath, 'utf-8')
       );
 
-      const publicPath = this.config.isSelfhosted
-        ? this.config.server.host + '/'
-        : assets.publicPath;
+      const publicPath = this.config.isSelfhosted ? '/' : assets.publicPath;
 
       assets.publicPath = publicPath;
       assets.js = assets.js.map(path => publicPath + path);
