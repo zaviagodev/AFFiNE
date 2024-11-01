@@ -4,11 +4,11 @@ import { useI18n } from '@affine/i18n';
 import { DocsService, useLiveData, useService } from '@toeverything/infra';
 import { useMemo } from 'react';
 
-import { SelectorLayout, type SelectorLayoutProps } from './layout';
+import { GenericSelector, type GenericSelectorProps } from './generic-selector';
 
 export interface DocsSelectorProps
   extends BaseSelectorDialogProps<string[]>,
-    Pick<SelectorLayoutProps, 'totalRenderer'> {}
+    Pick<GenericSelectorProps, 'where' | 'type'> {}
 
 const DocIcon = ({ docId }: { docId: string }) => {
   const docDisplayMetaService = useService(DocDisplayMetaService);
@@ -25,30 +25,12 @@ const DocLabel = ({ docId }: { docId: string }) => {
   return typeof label === 'string' ? label : t[label.i18nKey]();
 };
 
-const ChangedRenderer: SelectorLayoutProps['changedRenderer'] = ({
-  added,
-  removed,
-}) => {
-  const t = useI18n();
-
-  const addedText = added
-    ? t['com.affine.m.selector.doc-select-added']({ count: `${added}` })
-    : '';
-  const removedText = removed
-    ? t['com.affine.m.selector.doc-select-removed']({ count: `${removed}` })
-    : '';
-  const connector = added && removed ? ' · ' : '';
-  return addedText + connector + removedText;
-};
-
 export const DocsSelector = ({
   init = [],
   onCancel,
   onConfirm,
-  totalRenderer,
+  ...otherProps
 }: DocsSelectorProps) => {
-  const t = useI18n();
-
   const docsService = useService(DocsService);
   const docRecords = useLiveData(docsService.list.docs$);
 
@@ -65,14 +47,12 @@ export const DocsSelector = ({
   }, [docRecords]);
 
   return (
-    <SelectorLayout
-      title={t['com.affine.m.explorer.tag.manage-docs']()}
+    <GenericSelector
       onBack={onCancel}
       onConfirm={onConfirm}
       initial={init}
       data={list}
-      totalRenderer={totalRenderer}
-      changedRenderer={ChangedRenderer}
+      {...otherProps}
     />
   );
 };

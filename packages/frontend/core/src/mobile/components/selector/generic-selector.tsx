@@ -3,10 +3,12 @@ import {
   Checkbox,
   SafeArea,
   Scrollable,
+  useConfirmModal,
   useThemeColorMeta,
 } from '@affine/component';
 import { useI18n } from '@affine/i18n';
 import { ArrowRightSmallIcon } from '@blocksuite/icons/rc';
+import { GlobalCacheService, useService } from '@toeverything/infra';
 import { cssVarV2 } from '@toeverything/theme/v2';
 import {
   type ReactNode,
@@ -19,34 +21,71 @@ import {
 } from 'react';
 
 import { PageHeader } from '../page-header';
-import * as styles from './layout.css';
+import * as styles from './generic.css';
 
-export interface SelectorLayoutProps {
-  title: ReactNode;
+export interface GenericSelectorProps {
+  title?: ReactNode;
   onBack?: () => void;
   onConfirm?: (ids: string[]) => void;
   confirmText?: string;
   initial: string[];
   data: Array<{ id: string; icon: ReactNode; label: ReactNode }>;
-  totalRenderer?: (props: { total: number }) => ReactNode;
-  changedRenderer?: (props: { added: number; removed: number }) => ReactNode;
+  // totalRenderer?: (props: { total: number }) => ReactNode;
+  // changedRenderer?: (props: { added: number; removed: number }) => ReactNode;
+  // removeWarningType?: string;
+  // removeWarningWhere?: string;
+  type: 'doc' | 'tag' | 'collection';
+  where: 'tag' | 'folder' | 'collection';
 }
+const WILL_BE_REMOVED_WARNING_KEY = 'willBeRemovedWarningRead';
 
-export const SelectorLayout = ({
+const ChangedRenderer = ({
+  type,
+  added,
+  removed,
+}: {
+  added: number;
+  removed: number;
+  type: string;
+}) => {
+  const t = useI18n();
+
+  const addedText = added
+    ? t['com.affine.m.selector.info-added']({ count: `${added}`, type })
+    : '';
+  const removedText = removed
+    ? t['com.affine.m.selector.info-removed']({
+        count: `${removed}`,
+        type,
+      })
+    : '';
+  const connector = added && removed ? ' · ' : '';
+  return addedText + connector + removedText;
+};
+
+export const GenericSelector = ({
   initial: originalInitial,
   data,
   title,
-  onBack,
   confirmText,
+  type,
+  where,
+  onBack,
   onConfirm,
-  totalRenderer: TotalRenderer,
-  changedRenderer: ChangedRenderer,
-}: SelectorLayoutProps) => {
+}: GenericSelectorProps) => {
   const t = useI18n();
   useThemeColorMeta(cssVarV2('layer/background/secondary'));
   const listRef = useRef<HTMLUListElement>(null);
   const quickScrollRef = useRef<HTMLDivElement>(null);
+  const globalCache = useService(GlobalCacheService).globalCache;
+  const { openConfirmModal } = useConfirmModal();
 
+  const whereText = t[`com.affine.m.selector.where-${where}`]();
+  const typeText = t[`com.affine.m.selector.type-${type}`]();
+
+  const [willBeRemovedWarningRead] = useState(
+    globalCache.get<boolean>(WILL_BE_REMOVED_WARNING_KEY)
+  );
   // make sure "initial ids" exist in list
   const [initial] = useState(
     originalInitial.filter(id => data.some(el => el.id === id))
@@ -72,6 +111,39 @@ export const SelectorLayout = ({
       }
     });
   }, []);
+  const handleReadWillBeRemovedWarning = useCallback(() => {
+    globalCache.set(WILL_BE_REMOVED_WARNING_KEY, true);
+  }, [globalCache]);
+  const handleConfirm = useCallback(() => {
+    if (!willBeRemovedWarningRead && removed.length > 0) {
+      openConfirmModal({
+        title: t['com.affine.m.selector.remove-warning.title'](),
+        description: t['com.affine.m.selector.remove-warning.message']({
+          type: typeText,
+          where: whereText,
+        }),
+        cancelText: t['com.affine.m.selector.remove-warning.cancel'](),
+        confirmText: t['com.affine.m.selector.remove-warning.confirm'](),
+        reverseFooter: true,
+        onConfirm: () => {
+          handleReadWillBeRemovedWarning();
+          onConfirm?.(selected);
+        },
+      });
+      return;
+    }
+    onConfirm?.(selected);
+  }, [
+    handleReadWillBeRemovedWarning,
+    onConfirm,
+    openConfirmModal,
+    removed,
+    selected,
+    t,
+    typeText,
+    whereText,
+    willBeRemovedWarningRead,
+  ]);
 
   // touch & move to select
   useEffect(() => {
@@ -153,7 +225,9 @@ export const SelectorLayout = ({
   return (
     <div className={styles.root}>
       <PageHeader back backAction={onBack}>
-        <span className={styles.headerTitle}>{title}</span>
+        <span className={styles.headerTitle}>
+          {title ?? t['com.affine.m.selector.title']({ type: typeText })}
+        </span>
       </PageHeader>
       <Scrollable.Root className={styles.scrollArea}>
         <Scrollable.Scrollbar />
@@ -186,23 +260,29 @@ export const SelectorLayout = ({
       </Scrollable.Root>
       <SafeArea bottom className={styles.footer}>
         <div className={styles.info}>
-          {ChangedRenderer && !disableConfirm ? (
+          {!disableConfirm ? (
             <div className={styles.changedInfo}>
-              <ChangedRenderer added={added.length} removed={removed.length} />
+              <ChangedRenderer
+                added={added.length}
+                removed={removed.length}
+                type={typeText}
+              />
             </div>
           ) : null}
-          {TotalRenderer ? (
-            <div className={styles.totalInfo}>
-              <TotalRenderer total={initial.length} />
-            </div>
-          ) : null}
+
+          <div className={styles.totalInfo}>
+            {t['com.affine.m.selector.info-total']({
+              total: initial.length + '',
+              where: whereText,
+            })}
+          </div>
         </div>
         <div className={styles.actions}>
           <Button
             disabled={disableConfirm}
             variant="primary"
             className={styles.actionButton}
-            onClick={() => onConfirm?.(selected)}
+            onClick={handleConfirm}
           >
             {confirmText ?? t['com.affine.m.selector.confirm-default']()}
           </Button>

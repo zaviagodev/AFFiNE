@@ -24,7 +24,7 @@ export const useSelectDialog = function useSelectDialog<T, P>(
     init?: T;
     onConfirm: (v: T) => void;
   }>();
-  const [additionalProps, setAdditionalProps] = useState<Record<string, any>>();
+  const [additionalProps, setAdditionalProps] = useState<P>();
 
   const onOpenChanged = useCallback((open: boolean) => {
     if (!open) setValue(undefined);
@@ -81,7 +81,7 @@ export const useSelectDialog = function useSelectDialog<T, P>(
             init={value.init}
             onCancel={close}
             onConfirm={value.onConfirm}
-            {...additionalProps}
+            {...(additionalProps as any)}
           />
         ) : null}
       </Modal>

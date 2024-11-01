@@ -26,11 +26,6 @@ import { useCallback, useMemo } from 'react';
 import { useSelectDoc } from '../../../selector';
 import { TagRenameSubMenu } from './dialog';
 
-const TagSelectTotal = ({ total }: { total: number }) => {
-  const t = useI18n();
-  return t['com.affine.m.selector.doc-select-total-tag']({ total: `${total}` });
-};
-
 export const useExplorerTagNodeOperations = (
   tagId: string,
   {
@@ -127,7 +122,7 @@ export const useExplorerTagNodeOperations = (
   );
   const handleOpenDocSelector = useCallback(() => {
     const initialIds = tagRecord?.pageIds$.value;
-    openDocSelector(initialIds, { totalRenderer: TagSelectTotal })
+    openDocSelector(initialIds, { where: 'tag', type: 'doc' })
       .then(selectedIds => {
         const newIds = selectedIds.filter(id => !initialIds?.includes(id));
         const removedIds = initialIds?.filter(id => !selectedIds.includes(id));
@@ -269,6 +264,7 @@ export const useExplorerTagNodeOperationsMenu = (
       handleChangeNameOrColor,
       handleMoveToTrash,
       handleNewDoc,
+      handleOpenDocSelector,
       handleOpenInSplitView,
       handleToggleFavoriteTag,
       t,

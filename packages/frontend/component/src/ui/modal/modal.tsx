@@ -23,7 +23,9 @@ export interface ModalProps extends DialogProps {
   height?: CSSProperties['height'];
   minHeight?: CSSProperties['minHeight'];
   title?: React.ReactNode;
+  headerClassName?: string;
   description?: React.ReactNode;
+  descriptionClassName?: string;
   withoutCloseButton?: boolean;
   /**
    * __Click outside__ or __Press `Esc`__ won't close the modal
@@ -130,7 +132,9 @@ export const ModalInner = forwardRef<HTMLDivElement, ModalProps>(
       height,
       minHeight = 194,
       title,
+      headerClassName,
       description,
+      descriptionClassName,
       withoutCloseButton = false,
       persistent,
       contentOptions: {
@@ -263,7 +267,9 @@ export const ModalInner = forwardRef<HTMLDivElement, ModalProps>(
                   </Dialog.Close>
                 )}
                 {title ? (
-                  <Dialog.Title className={styles.modalHeader}>
+                  <Dialog.Title
+                    className={clsx(styles.modalHeader, headerClassName)}
+                  >
                     {title}
                   </Dialog.Title>
                 ) : (
@@ -274,7 +280,12 @@ export const ModalInner = forwardRef<HTMLDivElement, ModalProps>(
                   </VisuallyHidden.Root>
                 )}
                 {description ? (
-                  <Dialog.Description className={styles.modalDescription}>
+                  <Dialog.Description
+                    className={clsx(
+                      styles.modalDescription,
+                      descriptionClassName
+                    )}
+                  >
                     {description}
                   </Dialog.Description>
                 ) : null}

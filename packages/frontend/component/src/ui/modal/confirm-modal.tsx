@@ -5,9 +5,9 @@ import { createContext, useCallback, useContext, useState } from 'react';
 
 import type { ButtonProps } from '../button';
 import { Button } from '../button';
+import styles from './confirm-modal.css';
 import type { ModalProps } from './modal';
 import { Modal } from './modal';
-import * as styles from './styles.css';
 
 export interface ConfirmModalProps extends ModalProps {
   confirmButtonOptions?: Omit<ButtonProps, 'children'>;
@@ -36,6 +36,8 @@ export const ConfirmModal = ({
   onCancel,
   width = 480,
   autoFocusConfirm = true,
+  headerClassName,
+  descriptionClassName,
   ...props
 }: ConfirmModalProps) => {
   const onConfirmClick = useCallback(() => {
@@ -46,7 +48,7 @@ export const ConfirmModal = ({
   return (
     <Modal
       contentOptions={{
-        className: styles.confirmModalContainer,
+        className: styles.container,
         onPointerDownOutside: e => {
           e.stopPropagation();
           onCancel?.();
@@ -56,19 +58,20 @@ export const ConfirmModal = ({
       closeButtonOptions={{
         onClick: onCancel,
       }}
+      headerClassName={clsx(styles.header, headerClassName)}
+      descriptionClassName={clsx(styles.description, descriptionClassName)}
       {...props}
     >
-      {children ? (
-        <div className={styles.confirmModalContent}>{children}</div>
-      ) : null}
+      {children ? <div className={styles.content}>{children}</div> : null}
       <div
-        className={clsx(styles.modalFooter, {
+        className={clsx(styles.footer, {
           modalFooterWithChildren: !!children,
           reverse: reverseFooter,
         })}
       >
         <DialogTrigger asChild>
           <Button
+            className={styles.action}
             onClick={onCancel}
             data-testid="confirm-modal-cancel"
             {...cancelButtonOptions}
@@ -77,6 +80,7 @@ export const ConfirmModal = ({
           </Button>
         </DialogTrigger>
         <Button
+          className={styles.action}
           onClick={onConfirmClick}
           data-testid="confirm-modal-confirm"
           autoFocus={autoFocusConfirm}

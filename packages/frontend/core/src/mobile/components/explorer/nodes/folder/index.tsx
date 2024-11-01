@@ -7,11 +7,6 @@ import {
   notify,
 } from '@affine/component';
 import { usePageHelper } from '@affine/core/components/blocksuite/block-suite-page-list/utils';
-import {
-  useSelectCollection,
-  useSelectDoc,
-  useSelectTag,
-} from '@affine/core/components/page-list/selector';
 import type {
   ExplorerTreeNodeIcon,
   NodeOperation,
@@ -42,6 +37,11 @@ import {
 import { difference } from 'lodash-es';
 import { useCallback, useMemo, useState } from 'react';
 
+import {
+  useSelectCollection,
+  useSelectDoc,
+  useSelectTag,
+} from '../../../selector';
 import { AddItemPlaceholder } from '../../layouts/add-item-placeholder';
 import { ExplorerTreeNode } from '../../tree/node';
 import { ExplorerCollectionNode } from '../collection';
@@ -195,7 +195,7 @@ const ExplorerFolderNodeFolder = ({
           : type === 'collection'
             ? openCollectionsSelector
             : openTagsSelector;
-      selector(initialIds)
+      selector(initialIds, { type, where: 'folder' })
         .then(selectedIds => {
           const newItemIds = difference(selectedIds, initialIds);
           const removedItemIds = difference(initialIds, selectedIds);
@@ -288,17 +288,6 @@ const ExplorerFolderNodeFolder = ({
         ),
       },
       {
-        index: 101,
-        view: (
-          <MenuItem
-            prefixIcon={<PageIcon />}
-            onClick={() => handleAddToFolder('doc')}
-          >
-            {t['com.affine.rootAppSidebar.organize.folder.add-docs']()}
-          </MenuItem>
-        ),
-      },
-      {
         index: 102,
         view: (
           <MenuSub
@@ -307,6 +296,12 @@ const ExplorerFolderNodeFolder = ({
             }}
             items={
               <>
+                <MenuItem
+                  prefixIcon={<PageIcon />}
+                  onClick={() => handleAddToFolder('doc')}
+                >
+                  {t['com.affine.rootAppSidebar.organize.folder.add-docs']()}
+                </MenuItem>
                 <MenuItem
                   onClick={() => handleAddToFolder('tag')}
                   prefixIcon={<TagsIcon />}
