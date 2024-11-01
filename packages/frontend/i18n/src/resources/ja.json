@@ -670,7 +670,6 @@
   "com.affine.page-properties.property.createdBy.tooltips": "現在のドキュメントの作成者を表示します。ドキュメントの所有権、説明責任、コラボレーションの追跡に役立ちます。",
   "com.affine.page-properties.property.updatedBy.tooltips": "現在のドキュメントの最終編集者を表示します。最近の変更を追跡するのに便利です。",
   "com.affine.page-properties.property.docPrimaryMode.tooltips": "ページモード、エッジレスモード、または自動からドキュメントモードを選択します。コンテンツに最適な表示を選ぶのに役立ちます。",
-  "com.affine.page-properties.property.docTheme.tooltips": "ドキュメントのテーマを「ライト」、「ダーク」、「システム」から選択します。コンテンツの表示スタイルを正確に制御するのに役立ちます。",
   "com.affine.propertySidebar.property-list.section": "プロパティ",
   "com.affine.propertySidebar.add-more.section": "プロパティを追加する",
   "com.affine.page-properties.settings.title": "プロパティをカスタマイズ",
