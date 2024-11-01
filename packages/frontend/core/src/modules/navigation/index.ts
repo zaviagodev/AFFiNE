@@ -8,7 +8,7 @@ export { NavigationButtons } from './view/navigation-buttons';
 
 import { type Framework, WorkspaceScope } from '@toeverything/infra';
 
-import { WorkbenchService } from '../workbench';
+import { WorkbenchService } from '../workbench/services/workbench';
 import { Navigator } from './entities/navigator';
 import { NavigatorService } from './services/navigator';
 

@@ -1,8 +1,8 @@
 import { toast } from '@affine/component';
 import { AppSidebarService } from '@affine/core/modules/app-sidebar';
-import { EditorSettingService } from '@affine/core/modules/editor-settting';
+import { EditorSettingService } from '@affine/core/modules/editor-setting';
 import { WorkbenchService } from '@affine/core/modules/workbench';
-import type { DocMode } from '@blocksuite/affine/blocks';
+import { type DocMode } from '@blocksuite/affine/blocks';
 import type { DocCollection } from '@blocksuite/affine/store';
 import { type DocProps, DocsService, useServices } from '@toeverything/infra';
 import { useCallback, useMemo } from 'react';

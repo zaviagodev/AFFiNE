@@ -14,7 +14,7 @@ export const CheckboxValue = ({ value, onChange }: PropertyValueProps) => {
     [onChange, parsedValue]
   );
   return (
-    <PropertyValue onClick={handleClick}>
+    <PropertyValue onClick={handleClick} className={styles.container}>
       <Checkbox
         className={styles.checkboxProperty}
         checked={parsedValue}

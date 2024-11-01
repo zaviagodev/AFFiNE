@@ -10,6 +10,10 @@ export const sidebarContainerInner = style({
   width: '100%',
   borderRadius: 'inherit',
   selectors: {
+    ['[data-client-border=true] &']: {
+      borderRadius: 6,
+      border: `0.5px solid ${cssVar('borderColor')}`,
+    },
     ['[data-client-border=true][data-is-floating="true"] &']: {
       boxShadow: cssVar('shadow3'),
       border: `1px solid ${cssVar('borderColor')}`,

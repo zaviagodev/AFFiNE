@@ -22,7 +22,6 @@ export const SidebarHeaderSwitcher = () => {
         tabId={tab.id}
       />
     ),
-    testId: `sidebar-tab-${tab.id}`,
     style: { padding: 0, fontSize: 20, width: 24 },
   }));
 

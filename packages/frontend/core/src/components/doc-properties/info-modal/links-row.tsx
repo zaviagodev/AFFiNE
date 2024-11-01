@@ -1,5 +1,6 @@
 import { PropertyCollapsibleSection } from '@affine/component';
 import type { Backlink, Link } from '@affine/core/modules/doc-link';
+import type { MouseEvent } from 'react';
 
 import { AffinePageReference } from '../../affine/reference-link';
 import * as styles from './links-row.css';
@@ -13,7 +14,7 @@ export const LinksRow = ({
   references: Backlink[] | Link[];
   label: string;
   className?: string;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent) => void;
 }) => {
   return (
     <PropertyCollapsibleSection
@@ -25,9 +26,8 @@ export const LinksRow = ({
           key={index}
           pageId={link.docId}
           params={'params' in link ? link.params : undefined}
-          wrapper={props => (
-            <div className={styles.wrapper} onClick={onClick} {...props} />
-          )}
+          className={styles.wrapper}
+          onClick={onClick}
         />
       ))}
     </PropertyCollapsibleSection>

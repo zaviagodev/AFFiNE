@@ -62,7 +62,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@blocksuite/affine": "0.0.0-canary-20241028080828",
+    "@blocksuite/affine": "0.17.23",
     "@blocksuite/icons": "2.1.69",
     "@chromatic-com/storybook": "^3.0.0",
     "@storybook/addon-essentials": "^8.2.9",
@@ -76,7 +76,7 @@
     "@types/react-dom": "^18.2.24",
     "@vanilla-extract/css": "^1.14.2",
     "storybook": "^8.2.9",
-    "typescript": "^5.4.5",
+    "typescript": "^5.6.3",
     "unplugin-swc": "^1.5.1",
     "vite": "^5.2.8",
     "vitest": "2.1.1"

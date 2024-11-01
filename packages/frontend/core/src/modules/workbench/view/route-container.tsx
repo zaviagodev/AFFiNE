@@ -34,7 +34,6 @@ const ToggleButton = ({
       onClick={onToggle}
       className={className}
       data-show={show}
-      data-testid="right-sidebar-toggle"
     >
       <RightSidebarIcon />
     </IconButton>

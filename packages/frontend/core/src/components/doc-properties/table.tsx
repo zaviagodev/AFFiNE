@@ -1,7 +1,6 @@
 import {
   Button,
   Menu,
-  MenuItem,
   PropertyCollapsibleContent,
   PropertyCollapsibleSection,
   PropertyName,
@@ -27,19 +26,14 @@ import {
 } from '@toeverything/infra';
 import clsx from 'clsx';
 import type React from 'react';
-import type { HTMLProps, PropsWithChildren } from 'react';
+import type { HTMLProps } from 'react';
 import { forwardRef, useCallback, useState } from 'react';
 
-import { AffinePageReference } from '../affine/reference-link';
 import { DocPropertyIcon } from './icons/doc-property-icon';
 import { CreatePropertyMenuItems } from './menu/create-doc-property';
 import { EditDocPropertyMenuItems } from './menu/edit-doc-property';
 import * as styles from './table.css';
 import { DocPropertyTypes, isSupportedDocPropertyType } from './types/constant';
-
-type DocBacklinksPopupProps = PropsWithChildren<{
-  backlinks: { docId: string; blockId: string; title: string }[];
-}>;
 
 export type DefaultOpenProperty =
   | {
@@ -54,35 +48,6 @@ export type DefaultOpenProperty =
 export interface DocPropertiesTableProps {
   defaultOpenProperty?: DefaultOpenProperty;
 }
-
-export const DocBacklinksPopup = ({
-  backlinks,
-  children,
-}: DocBacklinksPopupProps) => {
-  return (
-    <Menu
-      contentOptions={{
-        className: styles.backLinksMenu,
-        onClick(e) {
-          e.stopPropagation();
-        },
-      }}
-      items={
-        <div className={styles.backlinksList}>
-          {backlinks.map(link => (
-            <AffinePageReference
-              key={link.docId + ':' + link.blockId}
-              wrapper={MenuItem}
-              pageId={link.docId}
-            />
-          ))}
-        </div>
-      }
-    >
-      {children}
-    </Menu>
-  );
-};
 
 interface DocPropertiesTableHeaderProps {
   className?: string;

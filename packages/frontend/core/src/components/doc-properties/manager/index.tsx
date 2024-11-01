@@ -99,7 +99,10 @@ const PropertyItem = ({
   );
 
   return (
-    <Tooltip content={t.t(typeInfo?.description || propertyInfo.type)}>
+    <Tooltip
+      content={t.t(typeInfo?.description || propertyInfo.type)}
+      side="left"
+    >
       <div
         className={styles.itemContainer}
         ref={elem => {

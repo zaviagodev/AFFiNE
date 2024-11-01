@@ -1,4 +1,5 @@
 import { cssVar } from '@toeverything/theme';
+import { cssVarV2 } from '@toeverything/theme/v2';
 import { globalStyle, style } from '@vanilla-extract/css';
 
 export const wrapper = style({
@@ -9,6 +10,9 @@ export const wrapper = style({
   flexDirection: 'row',
   alignItems: 'center',
   padding: 4,
+  ':hover': {
+    background: cssVarV2('layer/background/hoverOverlay'),
+  },
 });
 
 globalStyle(`${wrapper} svg`, {

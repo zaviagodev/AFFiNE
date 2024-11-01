@@ -172,8 +172,8 @@ export const AFFiNESharePage = (props: ShareMenuProps) => {
     onClickCopyLink('edgeless' as DocMode);
   }, [onClickCopyLink]);
   const onCopyBlockLink = useCallback(() => {
-    onClickCopyLink(undefined, blockIds, elementIds);
-  }, [onClickCopyLink, blockIds, elementIds]);
+    onClickCopyLink(currentMode, blockIds, elementIds);
+  }, [onClickCopyLink, currentMode, blockIds, elementIds]);
 
   if (isLoading) {
     // TODO(@eyhn): loading and error UI

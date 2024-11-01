@@ -6,7 +6,6 @@ import { useCallback, useState } from 'react';
 
 import * as styles from './index.css';
 
-// Although it is called an input, it is actually a button.
 export function AppDownloadButton({
   className,
   style,

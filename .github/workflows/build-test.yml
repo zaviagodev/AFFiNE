@@ -392,49 +392,6 @@ jobs:
           name: affine
           fail_ci_if_error: false
 
-  copilot-e2e-test:
-    name: Server Copilot E2E Test
-    runs-on: [self-hosted, copilot-ci]
-    env:
-      DISTRIBUTION: web
-      DATABASE_URL: postgresql://affine:affine@localhost:5432/affine
-      IN_CI_TEST: true
-    needs:
-      - build-server-native
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: affine
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: ./.github/actions/setup-node
-        with:
-          corepack-install: true
-          playwright-install: true
-          hard-link-nm: false
-
-      - name: Download server-native.node
-        uses: actions/download-artifact@v4
-        with:
-          name: server-native.node
-          path: ./packages/backend/server
-
-      - name: Run Copilot E2E Test
-        uses: ./.github/actions/copilot-test
-        with:
-          openai-key: ${{ secrets.COPILOT_OPENAI_API_KEY }}
-          fal-key: ${{ secrets.COPILOT_FAL_API_KEY }}
-
   server-e2e-test:
     name: ${{ matrix.tests.name }}
     runs-on: ubuntu-latest
@@ -654,12 +611,14 @@ jobs:
           path: ./test-results
           if-no-files-found: ignore
 
-  test-build-ios:
+  test-build-mobile-app:
     uses: ./.github/workflows/release-mobile.yml
     with:
       build-type: canary
       build-target: development
     secrets: inherit
+    permissions:
+      id-token: 'write'
 
   test-done:
     needs:
@@ -674,10 +633,9 @@ jobs:
       - build-server-native
       - build-electron-renderer
       - server-test
-      - copilot-e2e-test
       - server-e2e-test
       - desktop-test
-      - test-build-ios
+      - test-build-mobile-app
     if: always()
     runs-on: ubuntu-latest
     name: 3, 2, 1 Launch

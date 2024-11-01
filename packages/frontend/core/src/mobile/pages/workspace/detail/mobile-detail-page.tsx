@@ -24,6 +24,7 @@ import { DisposableGroup } from '@blocksuite/affine/global/utils';
 import { type AffineEditorContainer } from '@blocksuite/affine/presets';
 import {
   DocService,
+  FeatureFlagService,
   FrameworkScope,
   GlobalContextService,
   useLiveData,
@@ -41,15 +42,21 @@ import { PageHeaderMenuButton } from './page-header-more-button';
 import { PageHeaderShareButton } from './page-header-share-button';
 
 const DetailPageImpl = () => {
-  const { editorService, docService, workspaceService, globalContextService } =
-    useServices({
-      WorkbenchService,
-      ViewService,
-      EditorService,
-      DocService,
-      WorkspaceService,
-      GlobalContextService,
-    });
+  const {
+    editorService,
+    docService,
+    workspaceService,
+    globalContextService,
+    featureFlagService,
+  } = useServices({
+    WorkbenchService,
+    ViewService,
+    EditorService,
+    DocService,
+    WorkspaceService,
+    GlobalContextService,
+    FeatureFlagService,
+  });
   const editor = editorService.editor;
   const workspace = workspaceService.workspace;
   const docCollection = workspace.docCollection;
@@ -62,6 +69,8 @@ const DetailPageImpl = () => {
   const { openPage, jumpToPageBlock } = useNavigateHelper();
   const editorContainer = useLiveData(editor.editorContainer$);
 
+  const enableKeyboardToolbar =
+    featureFlagService.flags.enable_mobile_keyboard_toolbar.value;
   const { setDocReadonly } = useDocMetaHelper();
 
   // TODO(@eyhn): remove jotai here
@@ -90,8 +99,8 @@ const DetailPageImpl = () => {
   }, [doc, globalContext, mode]);
 
   useEffect(() => {
-    setDocReadonly(doc.id, true);
-  }, [doc.id, setDocReadonly]);
+    if (!enableKeyboardToolbar) setDocReadonly(doc.id, true);
+  }, [enableKeyboardToolbar, doc.id, setDocReadonly]);
 
   useEffect(() => {
     globalContext.isTrashDoc.set(!!isInTrash);

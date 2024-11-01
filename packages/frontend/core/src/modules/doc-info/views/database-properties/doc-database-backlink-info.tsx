@@ -7,7 +7,7 @@ import {
 import { AffinePageReference } from '@affine/core/components/affine/reference-link';
 import { useI18n } from '@affine/i18n';
 import type { DatabaseBlockDataSource } from '@blocksuite/affine/blocks';
-import { DatabaseTableViewIcon } from '@blocksuite/icons/rc';
+import { DatabaseTableViewIcon, PageIcon } from '@blocksuite/icons/rc';
 import {
   DocService,
   LiveData,
@@ -117,6 +117,7 @@ const DatabaseBacklinkRow = ({
           className={styles.docRefLink}
           pageId={row.docId}
           params={pageRefParams}
+          Icon={PageIcon}
         />
       }
     >

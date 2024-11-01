@@ -7,19 +7,25 @@ import {
 } from '@affine/component/ui/menu';
 import { PageHistoryModal } from '@affine/core/components/affine/page-history-modal';
 import { ShareMenuContent } from '@affine/core/components/affine/share-page-modal/share-menu';
-import { openHistoryTipsModalAtom } from '@affine/core/components/atoms';
+import {
+  openHistoryTipsModalAtom,
+  openImportModalAtom,
+} from '@affine/core/components/atoms';
 import { useBlockSuiteMetaHelper } from '@affine/core/components/hooks/affine/use-block-suite-meta-helper';
 import { useEnableCloud } from '@affine/core/components/hooks/affine/use-enable-cloud';
 import { useExportPage } from '@affine/core/components/hooks/affine/use-export-page';
 import { useTrashModalHelper } from '@affine/core/components/hooks/affine/use-trash-modal-helper';
-import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import { useDocMetaHelper } from '@affine/core/components/hooks/use-block-suite-page-meta';
-import { Export, MoveToTrash } from '@affine/core/components/page-list';
+import {
+  Export,
+  MoveToTrash,
+  Snapshot,
+} from '@affine/core/components/page-list';
 import { IsFavoriteIcon } from '@affine/core/components/pure/icons';
 import { useDetailPageHeaderResponsive } from '@affine/core/desktop/pages/workspace/detail-page/use-header-responsive';
 import { DocInfoService } from '@affine/core/modules/doc-info';
 import { EditorService } from '@affine/core/modules/editor';
-import { getOpenUrlInDesktopAppLink } from '@affine/core/modules/open-in-app/utils';
+import { OpenInAppService } from '@affine/core/modules/open-in-app/services';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { ViewService } from '@affine/core/modules/workbench/services/view';
 import { WorkspaceFlavour } from '@affine/env/workspace';
@@ -42,12 +48,17 @@ import {
   SplitViewIcon,
   TocIcon,
 } from '@blocksuite/icons/rc';
-import { useLiveData, useService, WorkspaceService } from '@toeverything/infra';
+import {
+  FeatureFlagService,
+  useLiveData,
+  useService,
+  useServiceOptional,
+  WorkspaceService,
+} from '@toeverything/infra';
 import { useSetAtom } from 'jotai';
 import { useCallback, useState } from 'react';
 
 import { HeaderDropDownButton } from '../../../pure/header-drop-down-button';
-import { usePageHelper } from '../../block-suite-page-list/utils';
 import { useFavorite } from '../favorite';
 
 type PageMenuProps = {
@@ -69,7 +80,6 @@ export const PageHeaderMenuButton = ({
   const confirmEnableCloud = useEnableCloud();
 
   const workspace = useService(WorkspaceService).workspace;
-  const docCollection = workspace.docCollection;
 
   const editorService = useService(EditorService);
   const isInTrash = useLiveData(
@@ -79,11 +89,15 @@ export const PageHeaderMenuButton = ({
   const primaryMode = useLiveData(editorService.editor.doc.primaryMode$);
 
   const workbench = useService(WorkbenchService).workbench;
+  const featureFlagService = useService(FeatureFlagService);
+  const enableSnapshotImportExport = useLiveData(
+    featureFlagService.flags.enable_snapshot_import_export.$
+  );
+  const openInAppService = useServiceOptional(OpenInAppService);
 
   const { favorite, toggleFavorite } = useFavorite(pageId);
 
   const { duplicate } = useBlockSuiteMetaHelper();
-  const { importFile } = usePageHelper(docCollection);
   const { setTrashModal } = useTrashModalHelper();
 
   const [isEditing, setEditing] = useState(!page.readonly);
@@ -109,6 +123,7 @@ export const PageHeaderMenuButton = ({
 
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const setOpenHistoryTipsModal = useSetAtom(openHistoryTipsModalAtom);
+  const setOpenImportModalAtom = useSetAtom(openImportModalAtom);
 
   const openHistoryModal = useCallback(() => {
     track.$.header.history.open();
@@ -184,19 +199,10 @@ export const PageHeaderMenuButton = ({
     });
   }, [duplicate, pageId]);
 
-  const onImportFile = useAsyncCallback(async () => {
-    const options = await importFile();
+  const handleOpenImportModal = useCallback(() => {
     track.$.header.docOptions.import();
-    if (options.isWorkspaceFile) {
-      track.$.header.actions.createWorkspace({
-        control: 'import',
-      });
-    } else {
-      track.$.header.actions.createDoc({
-        control: 'import',
-      });
-    }
-  }, [importFile]);
+    setOpenImportModalAtom(true);
+  }, [setOpenImportModalAtom]);
 
   const handleShareMenuOpenChange = useCallback((open: boolean) => {
     if (open) {
@@ -261,11 +267,8 @@ export const PageHeaderMenuButton = ({
   );
 
   const onOpenInDesktop = useCallback(() => {
-    const url = getOpenUrlInDesktopAppLink(window.location.href, true);
-    if (url) {
-      window.open(url, '_blank');
-    }
-  }, []);
+    openInAppService?.showOpenInAppPage();
+  }, [openInAppService]);
 
   const EditMenu = (
     <>
@@ -361,17 +364,19 @@ export const PageHeaderMenuButton = ({
       <MenuItem
         prefixIcon={<ImportIcon />}
         data-testid="editor-option-menu-import"
-        onSelect={onImportFile}
+        onSelect={handleOpenImportModal}
       >
         {t['Import']()}
       </MenuItem>
       <Export exportHandler={exportHandler} pageMode={currentMode} />
+      {enableSnapshotImportExport && <Snapshot />}
       <MenuSeparator />
       <MoveToTrash
         data-testid="editor-option-menu-delete"
         onSelect={handleOpenTrashModal}
       />
-      {BUILD_CONFIG.isWeb ? (
+      {BUILD_CONFIG.isWeb &&
+      workspace.flavour === WorkspaceFlavour.AFFINE_CLOUD ? (
         <MenuItem
           prefixIcon={<LocalWorkspaceIcon />}
           data-testid="editor-option-menu-link"

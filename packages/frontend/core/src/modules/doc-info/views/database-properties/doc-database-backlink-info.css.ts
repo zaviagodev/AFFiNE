@@ -1,6 +1,6 @@
 import { cssVar } from '@toeverything/theme';
 import { cssVarV2 } from '@toeverything/theme/v2';
-import { globalStyle, style } from '@vanilla-extract/css';
+import { style } from '@vanilla-extract/css';
 
 export const root = style({
   display: 'flex',
@@ -15,7 +15,6 @@ export const section = style({
 
 export const cell = style({
   display: 'flex',
-  gap: 4,
 });
 
 export const divider = style({
@@ -40,8 +39,4 @@ export const cellList = style({
   display: 'flex',
   flexDirection: 'column',
   gap: 4,
-});
-
-globalStyle(`${docRefLink} .affine-reference-title`, {
-  border: 'none',
 });

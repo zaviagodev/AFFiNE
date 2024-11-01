@@ -7,11 +7,12 @@ import { useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
 import type { DocMode } from '@blocksuite/affine/blocks';
 import type { DocCollection } from '@blocksuite/affine/store';
-import { useLiveData, useService } from '@toeverything/infra';
+import { LiveData, useLiveData, useService } from '@toeverything/infra';
 import clsx from 'clsx';
 import { nanoid } from 'nanoid';
 import {
-  type PropsWithChildren,
+  type ComponentType,
+  type MouseEvent,
   useCallback,
   useMemo,
   useRef,
@@ -21,20 +22,20 @@ import { Link } from 'react-router-dom';
 
 import * as styles from './styles.css';
 
-export function AffinePageReference({
-  pageId,
-  wrapper: Wrapper,
-  params,
-  className,
-}: {
+interface AffinePageReferenceProps {
   pageId: string;
-  wrapper?: React.ComponentType<PropsWithChildren>;
   params?: URLSearchParams;
   className?: string;
-}) {
+  Icon?: ComponentType;
+  onClick?: (e: MouseEvent) => void;
+}
+
+function AffinePageReferenceInner({
+  pageId,
+  params,
+  Icon: UserIcon,
+}: AffinePageReferenceProps) {
   const docDisplayMetaService = useService(DocDisplayMetaService);
-  const journalService = useService(JournalService);
-  const isJournal = !!useLiveData(journalService.journalDate$(pageId));
   const i18n = useI18n();
 
   let linkWithMode: DocMode | null = null;
@@ -48,22 +49,40 @@ export function AffinePageReference({
   }
 
   const Icon = useLiveData(
-    docDisplayMetaService.icon$(pageId, {
-      mode: linkWithMode ?? undefined,
-      reference: true,
-      referenceToNode: linkToNode,
+    LiveData.computed(get => {
+      if (UserIcon) {
+        return UserIcon;
+      }
+      return get(
+        docDisplayMetaService.icon$(pageId, {
+          mode: linkWithMode ?? undefined,
+          reference: true,
+          referenceToNode: linkToNode,
+        })
+      );
     })
   );
   const title = useLiveData(
     docDisplayMetaService.title$(pageId, { reference: true })
   );
 
-  const el = (
+  return (
     <>
       <Icon className={styles.pageReferenceIcon} />
       <span className="affine-reference-title">{i18n.t(title)}</span>
     </>
   );
+}
+
+export function AffinePageReference({
+  pageId,
+  params,
+  className,
+  Icon,
+  onClick: userOnClick,
+}: AffinePageReferenceProps) {
+  const journalService = useService(JournalService);
+  const isJournal = !!useLiveData(journalService.journalDate$(pageId));
 
   const ref = useRef<HTMLAnchorElement>(null);
 
@@ -74,6 +93,12 @@ export function AffinePageReference({
 
   const onClick = useCallback(
     (e: React.MouseEvent) => {
+      userOnClick?.(e);
+
+      if (e.defaultPrevented) {
+        return;
+      }
+
       if (isJournal) {
         track.doc.editor.pageRef.navigate({
           to: 'journal',
@@ -99,7 +124,7 @@ export function AffinePageReference({
 
       return;
     },
-    [isInPeekView, isJournal, peekView]
+    [isInPeekView, isJournal, peekView, userOnClick]
   );
 
   const query = useMemo(() => {
@@ -117,7 +142,7 @@ export function AffinePageReference({
       onClick={onClick}
       className={clsx(styles.pageReferenceLink, className)}
     >
-      {Wrapper ? <Wrapper>{el}</Wrapper> : el}
+      <AffinePageReferenceInner pageId={pageId} params={params} Icon={Icon} />
     </WorkbenchLink>
   );
 }
@@ -125,43 +150,14 @@ export function AffinePageReference({
 export function AffineSharedPageReference({
   pageId,
   docCollection,
-  wrapper: Wrapper,
   params,
-}: {
-  pageId: string;
+  Icon,
+  onClick: userOnClick,
+}: AffinePageReferenceProps & {
   docCollection: DocCollection;
-  wrapper?: React.ComponentType<PropsWithChildren>;
-  params?: URLSearchParams;
 }) {
-  const docDisplayMetaService = useService(DocDisplayMetaService);
   const journalService = useService(JournalService);
   const isJournal = !!useLiveData(journalService.journalDate$(pageId));
-  const i18n = useI18n();
-
-  let linkWithMode: DocMode | null = null;
-  let linkToNode = false;
-  if (params) {
-    const m = params.get('mode');
-    if (m && (m === 'page' || m === 'edgeless')) {
-      linkWithMode = m as DocMode;
-    }
-    linkToNode = params.has('blockIds') || params.has('elementIds');
-  }
-
-  const Icon = useLiveData(
-    docDisplayMetaService.icon$(pageId, {
-      mode: linkWithMode ?? undefined,
-      reference: true,
-      referenceToNode: linkToNode,
-    })
-  );
-  const title = useLiveData(docDisplayMetaService.title$(pageId));
-  const el = (
-    <>
-      <Icon className={styles.pageReferenceIcon} />
-      <span className="affine-reference-title">{i18n.t(title)}</span>
-    </>
-  );
 
   const ref = useRef<HTMLAnchorElement>(null);
 
@@ -169,6 +165,12 @@ export function AffineSharedPageReference({
 
   const onClick = useCallback(
     (e: React.MouseEvent) => {
+      userOnClick?.(e);
+
+      if (e.defaultPrevented) {
+        return;
+      }
+
       if (isJournal) {
         track.doc.editor.pageRef.navigate({
           to: 'journal',
@@ -183,7 +185,7 @@ export function AffineSharedPageReference({
 
       return;
     },
-    [isJournal]
+    [isJournal, userOnClick]
   );
 
   const query = useMemo(() => {
@@ -201,7 +203,7 @@ export function AffineSharedPageReference({
       onClick={onClick}
       className={styles.pageReferenceLink}
     >
-      {Wrapper ? <Wrapper>{el}</Wrapper> : el}
+      <AffinePageReferenceInner pageId={pageId} params={params} Icon={Icon} />
     </Link>
   );
 }

@@ -1,4 +1,5 @@
 import { toURLSearchParams } from '@affine/core/modules/navigation';
+import { getOpenUrlInDesktopAppLink } from '@affine/core/modules/open-in-app';
 import type { DocMode } from '@blocksuite/affine/blocks';
 import { createContext, useCallback, useContext, useMemo } from 'react';
 import type { NavigateFunction, NavigateOptions } from 'react-router-dom';
@@ -159,10 +160,16 @@ export function useNavigateHelper() {
     [navigate]
   );
 
-  const openInApp = useCallback(
-    (scheme: string, path: string) => {
-      const encodedUrl = encodeURIComponent(`${scheme}://${path}`);
-      return navigate(`/open-app/url?scheme=${scheme}&url=${encodedUrl}`);
+  const jumpToOpenInApp = useCallback(
+    (url: string, newTab = true) => {
+      const deeplink = getOpenUrlInDesktopAppLink(url, newTab);
+
+      if (!deeplink) {
+        return;
+      }
+
+      const encodedUrl = encodeURIComponent(deeplink);
+      return navigate(`/open-app/url?url=${encodedUrl}`);
     },
     [navigate]
   );
@@ -189,7 +196,7 @@ export function useNavigateHelper() {
       jumpToCollections,
       jumpToTags,
       jumpToTag,
-      openInApp,
+      jumpToOpenInApp,
       jumpToImportTemplate,
     }),
     [
@@ -204,7 +211,7 @@ export function useNavigateHelper() {
       jumpToCollections,
       jumpToTags,
       jumpToTag,
-      openInApp,
+      jumpToOpenInApp,
       jumpToImportTemplate,
     ]
   );

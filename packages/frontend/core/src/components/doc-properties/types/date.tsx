@@ -65,7 +65,7 @@ const MetaDateValueFactory = ({
     const date = value ? i18nTime(value) : null;
 
     return (
-      <Tooltip content={date}>
+      <Tooltip content={date} side="top" align="end">
         <PropertyValue
           className={relativeDate ? '' : styles.empty}
           isEmpty={!relativeDate}

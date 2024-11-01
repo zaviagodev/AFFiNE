@@ -1,6 +1,11 @@
-import { cssVar } from '@toeverything/theme';
+import { cssVarV2 } from '@toeverything/theme/v2';
 import { style } from '@vanilla-extract/css';
 
 export const checkboxProperty = style({
-  fontSize: cssVar('fontH5'),
+  fontSize: 24,
+  color: cssVarV2('icon/primary'),
+});
+
+export const container = style({
+  padding: 4,
 });

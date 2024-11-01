@@ -7,6 +7,11 @@ import { router } from '@affine/core/desktop/router';
 import { configureCommonModules } from '@affine/core/modules';
 import { configureAppTabsHeaderModule } from '@affine/core/modules/app-tabs-header';
 import { ValidatorProvider } from '@affine/core/modules/cloud';
+import {
+  configureDesktopApiModule,
+  DesktopApiService,
+} from '@affine/core/modules/desktop-api';
+import { configureFindInPageModule } from '@affine/core/modules/find-in-page';
 import { I18nProvider } from '@affine/core/modules/i18n';
 import { configureElectronStateStorageImpls } from '@affine/core/modules/storage';
 import { CustomThemeModifier } from '@affine/core/modules/theme-editor';
@@ -21,7 +26,6 @@ import {
   configureSqliteWorkspaceEngineStorageProvider,
 } from '@affine/core/modules/workspace-engine';
 import createEmotionCache from '@affine/core/utils/create-emotion-cache';
-import { apis, appInfo } from '@affine/electron-api';
 import { CacheProvider } from '@emotion/react';
 import {
   Framework,
@@ -31,6 +35,8 @@ import {
 } from '@toeverything/infra';
 import { Suspense } from 'react';
 import { RouterProvider } from 'react-router-dom';
+
+import { DesktopThemeSync } from './theme-sync';
 
 const desktopWhiteList = [
   '/open-app/signin-redirect',
@@ -64,26 +70,38 @@ configureSqliteWorkspaceEngineStorageProvider(framework);
 configureSqliteUserspaceStorageProvider(framework);
 configureDesktopWorkbenchModule(framework);
 configureAppTabsHeaderModule(framework);
-framework.impl(PopupWindowProvider, {
-  open: (url: string) => {
-    apis?.ui.openExternal(url).catch(e => {
-      console.error('Failed to open external URL', e);
-    });
-  },
+configureFindInPageModule(framework);
+configureDesktopApiModule(framework);
+
+framework.impl(PopupWindowProvider, p => {
+  const apis = p.get(DesktopApiService).api;
+  return {
+    open: (url: string) => {
+      apis.handler.ui.openExternal(url).catch(e => {
+        console.error('Failed to open external URL', e);
+      });
+    },
+  };
 });
-framework.impl(ClientSchemeProvider, {
-  getClientScheme() {
-    return appInfo?.scheme;
-  },
+framework.impl(ClientSchemeProvider, p => {
+  const appInfo = p.get(DesktopApiService).appInfo;
+  return {
+    getClientScheme() {
+      return appInfo?.scheme;
+    },
+  };
 });
-framework.impl(ValidatorProvider, {
-  async validate(_challenge, resource) {
-    const token = await apis?.ui?.getChallengeResponse(resource);
-    if (!token) {
-      throw new Error('Challenge failed');
-    }
-    return token;
-  },
+framework.impl(ValidatorProvider, p => {
+  const apis = p.get(DesktopApiService).api;
+  return {
+    async validate(_challenge, resource) {
+      const token = await apis.handler.ui.getChallengeResponse(resource);
+      if (!token) {
+        throw new Error('Challenge failed');
+      }
+      return token;
+    },
+  };
 });
 const frameworkProvider = framework.provider();
 
@@ -100,6 +118,7 @@ export function App() {
         <CacheProvider value={cache}>
           <I18nProvider>
             <AffineContext store={getCurrentStore()}>
+              <DesktopThemeSync />
               <Telemetry />
               <CustomThemeModifier />
               <GlobalLoading />

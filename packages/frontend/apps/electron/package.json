@@ -28,7 +28,7 @@
     "@affine/core": "workspace:*",
     "@affine/i18n": "workspace:*",
     "@affine/native": "workspace:*",
-    "@blocksuite/affine": "0.0.0-canary-20241028080828",
+    "@blocksuite/affine": "0.17.23",
     "@electron-forge/cli": "^7.3.0",
     "@electron-forge/core": "^7.3.0",
     "@electron-forge/core-utils": "^7.3.0",
@@ -73,6 +73,7 @@
     "async-call-rpc": "^6.4.2",
     "electron-updater": "^6.2.1",
     "link-preview-js": "^3.0.5",
+    "next-themes": "^0.3.0",
     "yjs": "patch:yjs@npm%3A13.6.18#~/.yarn/patches/yjs-npm-13.6.18-ad0d5f7c43.patch"
   },
   "build": {

@@ -3,6 +3,7 @@ import type { FlagInfo } from './types';
 const isNotStableBuild = BUILD_CONFIG.appBuildType !== 'stable';
 const isDesktopEnvironment = BUILD_CONFIG.isElectron;
 const isCanaryBuild = BUILD_CONFIG.appBuildType === 'canary';
+const isMobile = BUILD_CONFIG.isMobileEdition;
 
 export const AFFINE_FLAGS = {
   enable_ai: {
@@ -150,6 +151,22 @@ export const AFFINE_FLAGS = {
     displayName: 'Advanced block visibility control',
     description:
       'To provide detailed control over which edgeless blocks are visible in page mode.',
+    configurable: true,
+    defaultState: false,
+  },
+  enable_mobile_keyboard_toolbar: {
+    category: 'blocksuite',
+    bsFlag: 'enable_mobile_keyboard_toolbar',
+    displayName: 'Mobile Keyboard Toolbar',
+    description: 'Enables the mobile keyboard toolbar.',
+    configurable: false,
+    defaultState: isMobile,
+  },
+  enable_snapshot_import_export: {
+    category: 'affine',
+    displayName: 'Enable Snapshot Import Export',
+    description:
+      'Once enabled, users can import and export blocksuite snapshots',
     configurable: true,
     defaultState: false,
   },

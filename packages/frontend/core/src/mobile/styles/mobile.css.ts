@@ -7,7 +7,7 @@ export const globalVars = {
 
 globalStyle(':root', {
   vars: {
-    [globalVars.appTabHeight]: '68px',
+    [globalVars.appTabHeight]: '62px',
   },
 });
 

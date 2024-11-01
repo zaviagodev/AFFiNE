@@ -932,7 +932,35 @@ export const isActiveTab = (wc: WebContents) => {
     WebContentViewsManager.instance.activeWorkbenchView?.webContents.id
   );
 };
+
+// parse the full pathname to basename and pathname
+// eg: /workspace/xxx/yyy => { basename: '/workspace/xxx', pathname: '/yyy' }
+export const parseFullPathname = (url: string) => {
+  const urlObj = new URL(url);
+  const basename = urlObj.pathname.match(/\/workspace\/[^/]+/g)?.[0] ?? '/';
+  return {
+    basename,
+    pathname: urlObj.pathname.slice(basename.length),
+    search: urlObj.search,
+    hash: urlObj.hash,
+  };
+};
+
 export const addTab = WebContentViewsManager.instance.addTab;
+export const addTabWithUrl = (url: string) => {
+  const { basename, pathname, search, hash } = parseFullPathname(url);
+  return addTab({
+    basename,
+    view: {
+      path: { pathname, search, hash },
+    },
+  });
+};
+
+export const loadUrlInActiveTab = async (_url: string) => {
+  // todo: implement
+  throw new Error('loadUrlInActiveTab not implemented');
+};
 export const showTab = WebContentViewsManager.instance.showTab;
 export const closeTab = WebContentViewsManager.instance.closeTab;
 export const undoCloseTab = WebContentViewsManager.instance.undoCloseTab;
