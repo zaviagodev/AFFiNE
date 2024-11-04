@@ -152,6 +152,24 @@ export class AuthService extends Service {
     this.session.revalidate();
   }
 
+  async signInSSO(credential: { token: string; team: string }) {
+    const searchParams = new URLSearchParams();
+    const res = await this.fetchService.fetch(
+      '/api/auth/sso-login?' + searchParams.toString(),
+      {
+        method: 'POST',
+        body: JSON.stringify(credential),
+        headers: {
+          'content-type': 'application/json',
+        },
+      }
+    );
+    if (!res.ok) {
+      throw new Error('Failed to sign in');
+    }
+    this.session.revalidate();
+  }
+
   async signOut() {
     await this.fetchService.fetch('/api/auth/sign-out');
     this.store.setCachedAuthSession(null);

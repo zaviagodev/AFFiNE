@@ -148,6 +148,7 @@ export const getDefaultAFFiNEConfig: () => AFFiNEConfig = () => {
     },
     auth: {
       allowSignup: true,
+      hostingUrl: 'https://hosting.zaviago.com',
       password: {
         minLength: node.prod ? 8 : 1,
         maxLength: 32,
