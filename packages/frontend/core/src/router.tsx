@@ -62,8 +62,8 @@ export const topLevelRoutes = [
         lazy: () => import('./pages/404'),
       },
       {
-        path: '/auth/:authType',
-        lazy: () => import('./pages/auth'),
+        path: '/app-sso',
+        lazy: () => import('./pages/sso'),
       },
       {
         path: '/expired',

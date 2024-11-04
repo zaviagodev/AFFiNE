@@ -12,6 +12,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
+import axios from 'axios';
 import type { Request, Response } from 'express';
 
 import {
@@ -32,6 +33,11 @@ class SignInCredential {
   password?: string;
 }
 
+class SignInSSO {
+  token!: string; // Add this line
+  team?: string; // Add this line
+}
+
 class MagicLinkCredential {
   email!: string;
   token!: string;
@@ -47,6 +53,40 @@ export class AuthController {
     private readonly token: TokenService,
     private readonly config: Config
   ) {}
+
+  @Public()
+  @Post('/sso-login')
+  @Header('content-type', 'application/json')
+  async ssologin(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() credential: SignInSSO
+  ) {
+    try {
+      const headers = {
+        Authorization: `Bearer ${credential.token}`,
+        ...(credential.team && { 'X-Press-Team': credential.team }),
+      };
+      const response = await axios.get(
+        this.config.auth.hostingUrl + '/api/method/press.api.account.get',
+        { headers }
+      );
+      const userinfo = response?.data?.message.team;
+      const user_email = userinfo?.user;
+
+      if (user_email) {
+        const finduser = await this.user.findUserByEmail(user_email);
+        const user = await this.user.fulfillUser(user_email, {
+          emailVerifiedAt: new Date(),
+          registered: !!finduser, // Convert finduser to a boolean
+        });
+        await this.auth.setCookie(req, res, user);
+        res.send({ id: user.id, email: user.email, name: user.name });
+      }
+    } catch (error) {
+      throw new BadRequestException('Authentication failed');
+    }
+  }
 
   @Public()
   @Post('/sign-in')

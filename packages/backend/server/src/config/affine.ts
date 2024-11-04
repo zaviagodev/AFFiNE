@@ -54,7 +54,7 @@ AFFiNE.port = 3010;
 //
 // /* Authentication Settings */
 // /* Whether allow anyone signup */
-// AFFiNE.auth.allowSignup = true;
+AFFiNE.auth.allowSignup = true;
 //
 // /* User Signup password limitation */
 // AFFiNE.auth.password = {
