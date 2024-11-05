@@ -62,54 +62,30 @@ export class AuthController {
     @Res() res: Response,
     @Body() credential: SignInSSO
   ) {
-
-
-    const headers = {
-      Authorization: `Bearer ${credential.token}`,
-      ...(credential.team && { 'X-Press-Team': credential.team }),
-    };
-    const response = await axios.get('https://hosting.zaviago.com/api/method/press.api.account.get', {
-      headers,
-    });
-    const userinfo = response?.data?.message.team;
-    const user_email = userinfo?.user;
-
-    if (user_email) {
-      const finduser = await this.user.findUserByEmail(user_email);
-      const user = await this.user.fulfillUser(user_email, {
-        emailVerifiedAt: new Date(),
-        registered: !!finduser, // Convert finduser to a boolean
-      });
-      await this.auth.setCookie(req, res, user);
-      res.send({ id: user.id, email: user.email, name: user.name });
-    }
-
-    res.send(user_email);
-
     
-    // try {
-    //   const headers = {
-    //     Authorization: `Bearer ${credential.token}`,
-    //     ...(credential.team && { 'X-Press-Team': credential.team }),
-    //   };
-    //   const response = await axios.get('https://hosting.zaviago.com/api/method/press.api.account.get', {
-    //     headers,
-    //   });
-    //   const userinfo = response?.data?.message.team;
-    //   const user_email = userinfo?.user;
+    try {
+      const headers = {
+        Authorization: `Bearer ${credential.token}`,
+        ...(credential.team && { 'X-Press-Team': credential.team }),
+      };
+      const response = await axios.get('https://hosting.zaviago.com/api/method/press.api.account.get', {
+        headers,
+      });
+      const userinfo = response?.data?.message.team;
+      const user_email = userinfo?.user;
 
-    //   if (user_email) {
-    //     const finduser = await this.user.findUserByEmail(user_email);
-    //     const user = await this.user.fulfillUser(user_email, {
-    //       emailVerifiedAt: new Date(),
-    //       registered: !!finduser, // Convert finduser to a boolean
-    //     });
-    //     await this.auth.setCookie(req, res, user);
-    //     res.send({ id: user.id, email: user.email, name: user.name });
-    //   }
-    // } catch (error) {
-    //   throw new BadRequestException('Authentication failed');
-    // }
+      if (user_email) {
+        const finduser = await this.user.findUserByEmail(user_email);
+        const user = await this.user.fulfillUser(user_email, {
+          emailVerifiedAt: new Date(),
+          registered: !!finduser, // Convert finduser to a boolean
+        });
+        await this.auth.setCookie(req, res, user);
+        res.send({ id: user.id, email: user.email, name: user.name });
+      }
+    } catch (error) {
+      throw new BadRequestException('Authentication failed');
+    }
   }
 
   @Public()
