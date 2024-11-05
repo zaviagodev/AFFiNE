@@ -18,6 +18,38 @@ jobs:
     name: Build Images
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Version
+        id: version
+        uses: ./.github/actions/setup-version
+      
+      - name: Setup Node.js
+        uses: ./.github/actions/setup-node
+        with:
+          electron-install: false
+          extra-flags: workspaces focus @affine/server
+      
+      - name: Build Server
+        run: yarn workspace @affine/server build
+
+      - name: Build Core
+        run: yarn nx build @affine/web --skip-nx-cache
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          BUILD_TYPE: ${{ github.event.inputs.flavor }}
+          CAPTCHA_SITE_KEY: ${{ secrets.CAPTCHA_SITE_KEY }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: 'affine-web'
+          SENTRY_RELEASE: ${{ steps.version.outputs.APP_VERSION }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          PERFSEE_TOKEN: ${{ secrets.PERFSEE_TOKEN }}
+          MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
+
       - name: Set up QEMU (for cross-platform builds)
         uses: docker/setup-qemu-action@v2
         with:
@@ -38,9 +70,6 @@ jobs:
 
       - name: Set GIT_SHORT_HASH
         run: echo "GIT_SHORT_HASH=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
-      - name: Checkout code
-        uses: actions/checkout@v2
 
       - name: Build front Dockerfile
         uses: docker/build-push-action@v6
