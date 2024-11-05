@@ -39,6 +39,9 @@ jobs:
       - name: Set GIT_SHORT_HASH
         run: echo "GIT_SHORT_HASH=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Build front Dockerfile
         uses: docker/build-push-action@v6
         with:
