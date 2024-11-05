@@ -26,7 +26,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
-          driver: docker-container  # Use docker-container driver for attestation support
+          driver: docker-container
           install: true
 
       - name: Log in to GitHub Container Registry
@@ -35,6 +35,9 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set GIT_SHORT_HASH
+        run: echo "GIT_SHORT_HASH=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Build front Dockerfile
         uses: docker/build-push-action@v6
@@ -45,7 +48,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: true
           file: .github/deployment/front/Dockerfile
-          tags: ghcr.io/zaviagodev/affine-front:${{env.RELEASE_FLAVOR}}-${{ env.GIT_SHORT_HASH }},ghcr.io/zaviagodev/affine-front:${{env.RELEASE_FLAVOR}}
+          tags: |
+            ghcr.io/zaviagodev/affine-front:${{ env.RELEASE_FLAVOR }}-${{ env.GIT_SHORT_HASH }}
+            ghcr.io/zaviagodev/affine-front:${{ env.RELEASE_FLAVOR }}
+            ghcr.io/zaviagodev/affine-front:latest
 
       - name: Build graphql Dockerfile
         uses: docker/build-push-action@v6
@@ -56,4 +62,7 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           provenance: true
           file: .github/deployment/node/Dockerfile
-          tags: ghcr.io/zaviagodev/affine-graphql:${{env.RELEASE_FLAVOR}}-${{ env.GIT_SHORT_HASH }},ghcr.io/zaviagodev/affine-graphql:${{env.RELEASE_FLAVOR}}
+          tags: |
+            ghcr.io/zaviagodev/affine-graphql:${{ env.RELEASE_FLAVOR }}-${{ env.GIT_SHORT_HASH }}
+            ghcr.io/zaviagodev/affine-graphql:${{ env.RELEASE_FLAVOR }}
+            ghcr.io/zaviagodev/affine-graphql:latest
