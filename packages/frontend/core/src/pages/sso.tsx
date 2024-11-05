@@ -45,7 +45,7 @@ const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
     if (token) {
       AffineSSO(token, team).catch(err => console.error(err));
     }
-  }, [AffineSSO, searchParams]);
+  }, []);
 
   return (
     <div>
