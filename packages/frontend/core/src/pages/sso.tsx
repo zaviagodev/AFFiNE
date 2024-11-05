@@ -2,7 +2,8 @@ import { AffineOtherPageLayout } from '@affine/component/affine-other-page-layou
 import { AuthService } from '@affine/core/modules/cloud';
 import { useService } from '@toeverything/infra';
 import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { redirect, useSearchParams } from 'react-router-dom';
+
 
 const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
   const [searchParams] = useSearchParams();
@@ -23,7 +24,7 @@ const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
           token: token ?? '',
           team: team ?? '',
         });
-        onSignedIn?.();
+        redirect('/');
       } catch (err) {
         console.error(err);
         setPasswordError(true); // Set error state if there's an issue
