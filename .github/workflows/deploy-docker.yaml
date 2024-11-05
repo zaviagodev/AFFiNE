@@ -49,8 +49,6 @@ jobs:
           provenance: true
           file: .github/deployment/front/Dockerfile
           tags: |
-            ghcr.io/zaviagodev/affine-front:${{ env.RELEASE_FLAVOR }}-${{ env.GIT_SHORT_HASH }}
-            ghcr.io/zaviagodev/affine-front:${{ env.RELEASE_FLAVOR }}
             ghcr.io/zaviagodev/affine-front:latest
 
       - name: Build graphql Dockerfile
@@ -63,6 +61,4 @@ jobs:
           provenance: true
           file: .github/deployment/node/Dockerfile
           tags: |
-            ghcr.io/zaviagodev/affine-graphql:${{ env.RELEASE_FLAVOR }}-${{ env.GIT_SHORT_HASH }}
-            ghcr.io/zaviagodev/affine-graphql:${{ env.RELEASE_FLAVOR }}
             ghcr.io/zaviagodev/affine-graphql:latest
