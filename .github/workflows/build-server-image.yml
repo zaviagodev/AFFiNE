@@ -38,7 +38,7 @@ jobs:
           path: ./packages/backend/server/dist
           if-no-files-found: error
 
-    build-web-selfhost:
+  build-web-selfhost:
     name: Build @affine/web selfhost
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.flavor }}
@@ -51,13 +51,12 @@ jobs:
           # Clear NX cache (you may also want to clear this folder in your environment)
           rm -rf ~/.nx/cache
 
+      - uses: actions/checkout@v4
       - name: Setup Version
         id: version
         uses: ./.github/actions/setup-version
-
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
-
       - name: Build Core
         run: yarn nx build @affine/web --skip-nx-cache
         env:
@@ -66,17 +65,14 @@ jobs:
           PUBLIC_PATH: '/'
           SELF_HOSTED: true
           MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
-
-    - name: Download selfhost fonts
-      run: node ./scripts/download-blocksuite-fonts.mjs
-
-    - name: Upload web artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: selfhost-web
-        path: ./packages/frontend/web/dist
-        if-no-files-found: error
-
+      - name: Download selfhost fonts
+        run: node ./scripts/download-blocksuite-fonts.mjs
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: selfhost-web
+          path: ./packages/frontend/web/dist
+          if-no-files-found: error
 
   build-server-native:
     name: Build Server native - ${{ matrix.targets.name }}
