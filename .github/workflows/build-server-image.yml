@@ -41,7 +41,7 @@ jobs:
   build-web:
     name: Build @affine/web
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.flavor }}
+    environment: 'stable'
     steps:
       - uses: actions/checkout@v4
       - name: Setup Version
@@ -55,7 +55,7 @@ jobs:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          BUILD_TYPE: ${{ github.event.inputs.flavor }}
+          BUILD_TYPE: 'stable'
           CAPTCHA_SITE_KEY: ${{ secrets.CAPTCHA_SITE_KEY }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: 'affine-web'
