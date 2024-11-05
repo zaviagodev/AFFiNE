@@ -41,7 +41,7 @@ jobs:
   build-web-selfhost:
     name: Build @affine/web selfhost
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.flavor }}
+    environment: 'stable'
     steps:
       - uses: actions/checkout@v4
       - name: Clear Yarn and NX Cache
@@ -60,7 +60,7 @@ jobs:
       - name: Build Core
         run: yarn nx build @affine/web --skip-nx-cache
         env:
-          BUILD_TYPE: ${{ github.event.inputs.flavor }}
+          BUILD_TYPE: 'stable'
           SHOULD_REPORT_TRACE: false
           PUBLIC_PATH: '/'
           SELF_HOSTED: true
