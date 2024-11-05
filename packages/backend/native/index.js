@@ -9,3 +9,4 @@ export const mergeUpdatesInApplyWay = binding.mergeUpdatesInApplyWay;
 export const verifyChallengeResponse = binding.verifyChallengeResponse;
 export const mintChallengeResponse = binding.mintChallengeResponse;
 export const getMime = binding.getMime;
+
