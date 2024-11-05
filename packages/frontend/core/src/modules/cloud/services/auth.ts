@@ -13,6 +13,10 @@ import { distinctUntilChanged, map, skip } from 'rxjs';
 import { type AuthAccountInfo, AuthSession } from '../entities/session';
 import type { AuthStore } from '../stores/auth';
 import type { FetchService } from './fetch';
+import {redirect} from 'react-router-dom';
+
+
+
 
 // Emit when account changed
 export const AccountChanged = createEvent<AuthAccountInfo | null>(
@@ -168,6 +172,7 @@ export class AuthService extends Service {
       throw new Error('Failed to sign in');
     }
     this.session.revalidate();
+    redirect('/');
   }
 
   async signOut() {
