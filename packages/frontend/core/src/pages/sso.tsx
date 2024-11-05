@@ -38,7 +38,11 @@ const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
     const token = searchParams.get('token');
     const team = searchParams.get('site'); // Rename 'site' to 'team'
 
-    if (token && team) {
+    if (!team) {
+      team = '';
+    }
+
+    if (token) {
       AffineSSO(token, team).catch(err => console.error(err));
     }
   }, [AffineSSO, searchParams]);
