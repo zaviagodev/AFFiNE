@@ -36,7 +36,7 @@ const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
 
   useEffect(() => {
     const token = searchParams.get('token');
-    const team = searchParams.get('site'); // Rename 'site' to 'team'
+    let  team = searchParams.get('site'); // Rename 'site' to 'team'
 
     if (!team) {
       team = '';
