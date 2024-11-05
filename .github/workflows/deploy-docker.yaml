@@ -21,11 +21,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Version
+      - name: Setup Version for server
         id: version
         uses: ./.github/actions/setup-version
       
-      - name: Setup Node.js
+      - name: Setup Node.js for server
         uses: ./.github/actions/setup-node
         with:
           electron-install: false
@@ -34,8 +34,15 @@ jobs:
       - name: Build Server
         run: yarn workspace @affine/server build
 
+      - name: Setup Version for web
+        id: version
+        uses: ./.github/actions/setup-version
+      
+      - name: Setup Node.js for web
+        uses: ./.github/actions/setup-node
+
       - name: Build Core
-        run: yarn workspace @affine/web build
+        run: yarn nx build @affine/web --skip-nx-cache
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
