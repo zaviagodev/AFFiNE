@@ -1,11 +1,9 @@
 name: Build Images
 
 on:
-  workflow_call:
-    inputs:
-      flavor:
-        type: string
-        required: true
+  push:
+    branches:
+      - stable
 
 env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
