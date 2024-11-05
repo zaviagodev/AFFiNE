@@ -35,7 +35,7 @@ jobs:
         run: yarn workspace @affine/server build
 
       - name: Build Core
-        run: yarn nx build @affine/web --skip-nx-cache
+        run: yarn workspace @affine/web build
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
