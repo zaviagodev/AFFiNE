@@ -2,16 +2,16 @@ import { AffineOtherPageLayout } from '@affine/component/affine-other-page-layou
 import { AuthService } from '@affine/core/modules/cloud';
 import { useService } from '@toeverything/infra';
 import { useCallback, useEffect, useState } from 'react';
-import { redirect, useSearchParams } from 'react-router-dom';
-
+import { Navigate, useSearchParams } from 'react-router-dom';
 
 const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
   const [searchParams] = useSearchParams();
   const authService = useService(AuthService);
 
-  // State for loading and error handling
+  // State for loading, error handling, and redirect
   const [isLoading, setIsLoading] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [redirectToHome, setRedirectToHome] = useState(false);
 
   // Define AffineSSO as an async function
   const AffineSSO = useCallback(
@@ -24,7 +24,10 @@ const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
           token: token ?? '',
           team: team ?? '',
         });
-        redirect('/');
+        
+        console.log('redirectttttttttttttttttttttttt');
+        setRedirectToHome(true); // Set redirect to true after successful sign-in
+
       } catch (err) {
         console.error(err);
         setPasswordError(true); // Set error state if there's an issue
@@ -37,7 +40,7 @@ const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
 
   useEffect(() => {
     const token = searchParams.get('token');
-    let  team = searchParams.get('site'); // Rename 'site' to 'team'
+    let team = searchParams.get('site'); // Rename 'site' to 'team'
 
     if (!team) {
       team = '';
@@ -46,7 +49,11 @@ const SSO = ({ onSignedIn }: { onSignedIn?: () => void }) => {
     if (token) {
       AffineSSO(token, team).catch(err => console.error(err));
     }
-  }, []);
+  }, [AffineSSO, searchParams]);
+
+  if (redirectToHome) {
+    return <Navigate to="/" />; // Redirect to home
+  }
 
   return (
     <div>
